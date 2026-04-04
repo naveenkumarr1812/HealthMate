@@ -37,7 +37,7 @@ function Message({ msg }) {
       )}
       <div className={`max-w-[75%] ${isUser ? "order-first" : ""}`}>
         <div
-          className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+          className={`px-3 py-2.5 md:px-4 md:py-3 rounded-2xl text-sm leading-relaxed ${
             isUser
               ? "bg-teal-400 text-white rounded-tr-sm"
               : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm"
@@ -68,7 +68,7 @@ function TypingIndicator() {
       <div className="w-7 h-7 rounded-full bg-teal-400 flex items-center justify-center flex-shrink-0">
         <span className="text-white text-xs font-bold">M</span>
       </div>
-      <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3">
+      <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-3 py-2.5 md:px-4 md:py-3">
         <div className="flex gap-1.5 items-center h-4">
           {[0, 1, 2].map((i) => (
             <div
@@ -170,7 +170,7 @@ export default function ChatWindow({ userId }) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
+      <div className="flex-1 overflow-y-auto px-3 py-4 md:px-4 md:py-5 space-y-5">
         {messages.map((msg, i) => (
           <Message key={i} msg={msg} />
         ))}
@@ -179,7 +179,7 @@ export default function ChatWindow({ userId }) {
       </div>
 
       {/* Input area */}
-      <div className="bg-white border-t border-gray-200 px-4 py-3">
+      <div className="bg-white border-t border-gray-200 px-3 py-2.5 md:px-4 md:py-3">
         {/* Tool toggles */}
         <div className="flex gap-2 mb-3">
           {[

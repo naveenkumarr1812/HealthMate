@@ -22,3 +22,15 @@ textarea { field-sizing: content; }
 /* Prose override for markdown */
 .prose pre { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
 .prose code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; font-size: 0.8em; }
+
+/* Mobile safe area for bottom nav */
+.safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Ensure full height on mobile */
+html { height: -webkit-fill-available; }
+body { min-height: -webkit-fill-available; }
+#root { min-height: -webkit-fill-available; }
+
+/* Prevent horizontal overflow on mobile */
+* { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }

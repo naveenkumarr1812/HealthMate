@@ -1,23 +1,19 @@
 import { useState, useEffect } from "react";
-import { Newspaper, RefreshCw, ExternalLink, Loader2 } from "lucide-react";
-import { getMedicalNews, getPersonalizedNews } from "../api/medai";
+import { Newspaper, RefreshCw, ExternalLink, Loader2, Tag } from "lucide-react";
+import { getMedicalNews } from "../api/medai";
+import { supabase } from "../api/supabaseClient";
+import axios from "axios";
 
 function NewsCard({ item }) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-teal-200 hover:shadow-sm transition">
       <p className="text-sm font-medium text-gray-900 leading-snug mb-2">{item.title}</p>
-      {item.content && (
-        <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{item.content}</p>
-      )}
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{item.source}</span>
+      {item.content && <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{item.content}</p>}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full truncate max-w-[160px]">{item.source || "Medical Source"}</span>
         {item.url && (
-          <a
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-teal-600 hover:underline font-medium"
-          >
+          <a href={item.url} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-teal-600 hover:underline font-medium flex-shrink-0">
             Read more <ExternalLink size={10} />
           </a>
         )}
@@ -27,74 +23,107 @@ function NewsCard({ item }) {
 }
 
 export default function MedicalNews({ userId }) {
-  const [news, setNews] = useState([]);
+  const [generalNews, setGeneralNews]         = useState([]);
   const [personalizedNews, setPersonalizedNews] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState("general"); // "general" | "personalized"
+  const [conditions, setConditions]           = useState([]);
+  const [loading, setLoading]                 = useState(false);
+  const [tab, setTab]                         = useState("general");
 
-  const fetchNews = async () => {
+  // Load user conditions from Supabase first
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("user_health_profiles")
+      .select("conditions")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        const conds = data?.conditions || [];
+        setConditions(conds);
+        fetchNews(conds);
+      })
+      .catch(() => fetchNews([]));
+  }, [userId]);
+
+  const fetchNews = async (conds) => {
     setLoading(true);
     try {
-      const [generalRes, personalRes] = await Promise.all([
-        getMedicalNews(),
-        getPersonalizedNews(userId),
-      ]);
-      setNews(generalRes.data.news || []);
-      setPersonalizedNews(personalRes.data.news || []);
-    } catch {
-      setNews([]);
+      const token = localStorage.getItem("access_token");
+
+      // General news
+      const generalRes = await getMedicalNews();
+      setGeneralNews(generalRes.data.news || []);
+
+      // Personalized: only if user has conditions saved
+      if (conds.length > 0) {
+        const personalRes = await axios.get(`/api/news/personalized/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPersonalizedNews(personalRes.data.news || []);
+      } else {
+        setPersonalizedNews([]);
+      }
+    } catch (err) {
+      console.error("News fetch error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchNews(); }, [userId]);
-
-  const displayed = tab === "general" ? news : personalizedNews;
+  const handleRefresh = () => fetchNews(conditions);
+  const displayed = tab === "general" ? generalNews : personalizedNews;
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Newspaper size={16} className="text-teal-600" />
+      <div className="bg-white border-b border-gray-100 px-4 md:px-5 py-3 md:py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Newspaper size={15} className="text-teal-600" />
           <h2 className="text-sm font-semibold text-gray-900">Medical News</h2>
-          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium ml-1">
-            via Tavily
-          </span>
+          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium">via Tavily</span>
         </div>
-        <button
-          onClick={fetchNews}
-          disabled={loading}
-          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition"
-        >
+        <button onClick={handleRefresh} disabled={loading}
+          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition">
           <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-100 px-5 flex gap-4">
-        {[
-          { id: "general", label: "General Medical News" },
-          { id: "personalized", label: "For Your Conditions" },
-        ].map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`py-3 text-xs font-medium border-b-2 transition ${
-              tab === t.id
-                ? "border-teal-400 text-teal-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="bg-white border-b border-gray-100 px-4 md:px-5 flex gap-1">
+        <button onClick={() => setTab("general")}
+          className={`py-3 text-xs font-medium border-b-2 transition mr-4 ${tab === "general" ? "border-teal-400 text-teal-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          General Medical News
+        </button>
+        <button onClick={() => setTab("personalized")}
+          className={`py-3 text-xs font-medium border-b-2 transition flex items-center gap-1.5 ${tab === "personalized" ? "border-teal-400 text-teal-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          <Tag size={11} /> For Your Conditions
+          {conditions.length > 0 && (
+            <span className="bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded-full text-xs font-medium">{conditions.length}</span>
+          )}
+        </button>
       </div>
 
+      {/* Condition chips — shown on personalized tab */}
+      {tab === "personalized" && conditions.length > 0 && (
+        <div className="bg-white border-b border-gray-100 px-4 md:px-5 py-2 flex flex-wrap gap-1.5">
+          <span className="text-xs text-gray-400 self-center">Showing news for:</span>
+          {conditions.map((c) => (
+            <span key={c} className="text-xs px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-100 font-medium">{c}</span>
+          ))}
+        </div>
+      )}
+
+      {/* No conditions warning */}
+      {tab === "personalized" && conditions.length === 0 && !loading && (
+        <div className="mx-4 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+          <p className="text-sm font-medium text-amber-700 mb-1">No conditions saved</p>
+          <p className="text-xs text-amber-600">Go to <strong>Health Profile</strong> and save your medical conditions to get personalized news.</p>
+        </div>
+      )}
+
       {/* News grid */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-4 md:p-5">
         {loading ? (
           <div className="flex items-center justify-center h-40 gap-2 text-gray-400">
             <Loader2 size={18} className="animate-spin" />
@@ -105,10 +134,8 @@ export default function MedicalNews({ userId }) {
             <p className="text-sm text-gray-400">No news available. Try refreshing.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-4xl">
-            {displayed.map((item, i) => (
-              <NewsCard key={i} item={item} />
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            {displayed.map((item, i) => <NewsCard key={i} item={item} />)}
           </div>
         )}
       </div>
