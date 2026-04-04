@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html, body, #root { height: 100%; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* Textarea auto-resize helper */
+textarea { field-sizing: content; }
+
+/* Prose override for markdown */
+.prose pre { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+.prose code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; font-size: 0.8em; }
