@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
-import { Mail, CheckCircle, XCircle, Loader2, ExternalLink } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Mail, CheckCircle, Loader2, ExternalLink, X } from "lucide-react";
 import { supabase } from "../api/supabaseClient";
 
-// ── Google OAuth config ───────────────────────────────────────
-// These are set in frontend .env
-const GOOGLE_CLIENT_ID  = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const REDIRECT_URI      = `${window.location.origin}/gmail-callback`;
-const SCOPES            = "https://www.googleapis.com/auth/gmail.send email profile";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const REDIRECT_URI     = `${window.location.origin}/gmail-callback`;
+const SCOPES           = "https://www.googleapis.com/auth/gmail.send email profile";
 
 function buildOAuthUrl(state) {
   const params = new URLSearchParams({
@@ -21,73 +19,82 @@ function buildOAuthUrl(state) {
   return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 }
 
-/**
- * GmailAuthButton
- * Shows:
- *  - "Connect Gmail" button if not authorized
- *  - Connected email + disconnect if authorized
- *  - Used inside MedicationTracker reminder toggle
- */
 export default function GmailAuthButton({ userId, onStatusChange }) {
-  const [status, setStatus]   = useState("loading"); // loading | connected | disconnected
-  const [email, setEmail]     = useState("");
+  const [status,  setStatus]  = useState("loading");
+  const [email,   setEmail]   = useState("");
   const [checking, setChecking] = useState(false);
 
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
+    if (!userId) return;
     setChecking(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("gmail_tokens")
         .select("gmail_email, expires_at")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (data?.gmail_email) {
-        // Check token not expired
-        const expired = data.expires_at && new Date(data.expires_at) < new Date();
-        if (!expired) {
-          setEmail(data.gmail_email);
-          setStatus("connected");
-          onStatusChange?.("connected", data.gmail_email);
-          return;
+      if (error || !data?.gmail_email) {
+        setStatus("disconnected");
+        onStatusChange?.("disconnected", null);
+        return;
+      }
+
+      // Check if token is expired
+      if (data.expires_at) {
+        const expires  = new Date(data.expires_at);
+        const now      = new Date();
+        if (expires <= now) {
+          // Token expired — backend will refresh automatically on next use
+          // But still show as connected since refresh_token exists
         }
       }
-      setStatus("disconnected");
-      onStatusChange?.("disconnected", null);
-    } catch {
+
+      setEmail(data.gmail_email);
+      setStatus("connected");
+      onStatusChange?.("connected", data.gmail_email);
+    } catch (e) {
+      console.error("[GmailAuth] Check error:", e);
       setStatus("disconnected");
     } finally {
       setChecking(false);
     }
-  };
+  }, [userId, onStatusChange]);
 
-  useEffect(() => { if (userId) checkConnection(); }, [userId]);
+  useEffect(() => { checkConnection(); }, [checkConnection]);
 
-  // Listen for OAuth callback message from popup
+  // Listen for OAuth callback success from popup
   useEffect(() => {
     const handler = (event) => {
+      if (event.origin !== window.location.origin) return;
       if (event.data?.type === "GMAIL_AUTH_SUCCESS") {
         checkConnection();
       }
     };
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, []);
+  }, [checkConnection]);
 
   const handleConnect = () => {
+    if (!GOOGLE_CLIENT_ID) {
+      alert("Google Client ID not configured. Add VITE_GOOGLE_CLIENT_ID to frontend .env");
+      return;
+    }
     const state = `${userId}:${Date.now()}`;
     sessionStorage.setItem("gmail_oauth_state", state);
-    const url = buildOAuthUrl(state);
-    // Open OAuth in popup — exactly like Claude connectors
+    const url   = buildOAuthUrl(state);
+    const left  = window.screenX + (window.outerWidth  - 520) / 2;
+    const top   = window.screenY + (window.outerHeight - 640) / 2;
     const popup = window.open(url, "gmail_auth",
-      "width=500,height=620,scrollbars=yes,resizable=yes,left=" +
-      (window.screenX + (window.outerWidth - 500) / 2) + ",top=" +
-      (window.screenY + (window.outerHeight - 620) / 2));
-    if (!popup) window.location.href = url; // fallback if popup blocked
+      `width=520,height=640,scrollbars=yes,resizable=yes,left=${left},top=${top}`);
+    if (!popup) {
+      // Popup blocked — redirect in same window
+      window.location.href = url;
+    }
   };
 
   const handleDisconnect = async () => {
-    if (!window.confirm("Disconnect Gmail? Email reminders will be disabled.")) return;
+    if (!window.confirm("Disconnect Gmail? Email reminders will stop.")) return;
     await supabase.from("gmail_tokens").delete().eq("user_id", userId);
     setStatus("disconnected");
     setEmail("");
@@ -96,7 +103,7 @@ export default function GmailAuthButton({ userId, onStatusChange }) {
 
   if (status === "loading" || checking) {
     return (
-      <div className="flex items-center gap-2 text-xs text-gray-400">
+      <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
         <Loader2 size={13} className="animate-spin" />
         Checking Gmail connection...
       </div>
@@ -109,13 +116,13 @@ export default function GmailAuthButton({ userId, onStatusChange }) {
         <div className="flex items-center gap-2">
           <CheckCircle size={14} className="text-green-500 flex-shrink-0" />
           <div>
-            <p className="text-xs font-medium text-green-800">Gmail connected</p>
-            <p className="text-xs text-green-600">{email}</p>
+            <p className="text-xs font-medium text-green-800">Gmail connected ✅</p>
+            <p className="text-xs text-green-600 truncate max-w-[160px]">{email}</p>
           </div>
         </div>
         <button onClick={handleDisconnect}
-          className="text-xs text-red-400 hover:text-red-600 transition font-medium">
-          Disconnect
+          className="text-xs text-red-400 hover:text-red-600 transition font-medium flex items-center gap-1">
+          <X size={11} /> Disconnect
         </button>
       </div>
     );
