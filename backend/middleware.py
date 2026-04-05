@@ -4,7 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from db.supabase_client import supabase
 
 # Public routes that don't need auth
-PUBLIC_PATHS = {"/", "/health", "/auth/signup", "/auth/login", "/docs", "/openapi.json", "/redoc"}
+PUBLIC_PATHS = {"/", "/health", "/auth/signup", "/auth/login", "/docs", "/openapi.json", "/redoc", "/medications/test-email"}
 
 class SupabaseAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):

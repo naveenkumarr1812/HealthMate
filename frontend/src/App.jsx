@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import GmailCallback from "./pages/GmailCallback";
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -25,10 +26,11 @@ function AppRoutes() {
   const { user } = useAuth();
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-      <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+      <Route path="/login"          element={user ? <Navigate to="/dashboard" /> : <Login />} />
+      <Route path="/signup"         element={user ? <Navigate to="/dashboard" /> : <Signup />} />
+      <Route path="/gmail-callback" element={<GmailCallback />} />
+      <Route path="/dashboard"      element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="*"               element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
     </Routes>
   );
 }

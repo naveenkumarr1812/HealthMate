@@ -1,5 +1,5 @@
+import json
 from langchain_groq import ChatGroq
-from langchain.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 
 from config import GROQ_API_KEY, GROQ_MODEL, RELEVANCE_THRESHOLD
@@ -10,211 +10,259 @@ from memory.user_context import (
     build_memory_system_prompt,
     save_chat_message,
 )
+from routers.search import search_nearby_places, duckduckgo_medical_search
 from agents.state import MedAIState
+import asyncio
 
-llm = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0.3)
+llm = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0.4)
+llm_precise = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0.1)
 
 # ─────────────────────────────────────────────
 # NODE 1: Load User Memory
 # ─────────────────────────────────────────────
 def load_user_memory(state: MedAIState) -> dict:
-    """Fetches user health profile from Supabase and builds memory prompt."""
-    context = load_user_health_context(state["user_id"])
+    context       = load_user_health_context(state["user_id"])
     memory_prompt = build_memory_system_prompt(context)
-    return {
-        "user_health_context": context,
-        "memory_prompt": memory_prompt,
-    }
+    return {"user_health_context": context, "memory_prompt": memory_prompt}
 
 # ─────────────────────────────────────────────
-# NODE 2: Retrieve Documents from FAISS
+# NODE 2: Retrieve Documents
 # ─────────────────────────────────────────────
 def retrieve_docs(state: MedAIState) -> dict:
-    """Searches user's FAISS index for relevant chunks."""
     docs = search(state["user_id"], state["query"])
     return {"retrieved_docs": docs}
 
 # ─────────────────────────────────────────────
-# NODE 3: Grade Document Relevance (Corrective RAG)
+# NODE 3: Grade Relevance
 # ─────────────────────────────────────────────
 def grade_documents(state: MedAIState) -> dict:
-    """
-    Scores the relevance of retrieved docs.
-    If score < threshold, graph routes to web search.
-    """
     score = grade_document_relevance(state["query"], state["retrieved_docs"])
-    print(f"[Corrective RAG] Relevance score: {score:.2f}")
     return {"relevance_score": score}
 
 # ─────────────────────────────────────────────
-# NODE 4: Web Search Fallback (Tavily)
+# NODE 4: Web Search (Tavily + DuckDuckGo fallback)
 # ─────────────────────────────────────────────
 def web_search_node(state: MedAIState) -> dict:
-    """Called when RAG docs are not relevant enough — fetches from Tavily."""
-    results = tavily_medical_search(state["query"])
-    return {
-        "web_results": results,
-        "sources_used": ["web"],
-    }
+    query   = state["query"]
+    results = tavily_medical_search(query)
+
+    # If Tavily gives nothing, fall back to DuckDuckGo (free)
+    if not results:
+        try:
+            loop    = asyncio.new_event_loop()
+            results = loop.run_until_complete(duckduckgo_medical_search(query))
+            loop.close()
+        except Exception:
+            pass
+
+    return {"web_results": results, "sources_used": ["web"]}
 
 # ─────────────────────────────────────────────
-# NODE 5: Generate Final Answer
+# NODE 5: Generate Answer — handles everything
 # ─────────────────────────────────────────────
 def generate_answer(state: MedAIState) -> dict:
-    """
-    Generates the final answer using:
-    - Retrieved RAG docs (if relevant)
-    - Tavily web results (if RAG was insufficient)
-    - User health memory (always injected)
-    """
-    context_parts = []
+    query         = state["query"]
+    memory_prompt = state.get("memory_prompt", "")
+    long_term_mem = state.get("long_term_memory", "")
+    location_ctx  = state.get("location_context", "")
+    osm_results   = state.get("osm_results", [])   # real nearby places
+    conv_history  = state.get("conversation_history", [])
 
+    # Build RAG/web context
+    context_parts = []
+    sources = ["memory"]
     if state.get("retrieved_docs") and state.get("relevance_score", 0) >= RELEVANCE_THRESHOLD:
-        context_parts.append("=== FROM YOUR DOCUMENTS ===\n" + "\n\n".join(state["retrieved_docs"]))
+        context_parts.append("FROM YOUR UPLOADED DOCUMENTS:\n" + "\n\n".join(state["retrieved_docs"]))
         sources = ["rag"]
     elif state.get("web_results"):
-        context_parts.append("=== FROM MEDICAL SOURCES ===\n" + "\n\n".join(state["web_results"][:3]))
+        context_parts.append("FROM WEB SEARCH:\n" + "\n\n".join(state["web_results"][:4]))
         sources = ["web"]
+    context_str = "\n\n".join(context_parts)
+
+    # Format real OSM results if available
+    nearby_str = ""
+    if osm_results:
+        lines = []
+        for i, p in enumerate(osm_results[:8], 1):
+            phone  = (" · 📞 " + p["phone"])    if p.get("phone")    else ""
+            addr   = (" · 📍 " + p["address"])   if p.get("address")  else ""
+            dist   = (" (" + str(p["dist_km"]) + " km away)") if p.get("dist_km") else ""
+            maps   = ("\n   🗺️ [Open in Google Maps](" + p["maps_url"] + ")") if p.get("maps_url") else ""
+            emerg  = " 🚨 Has Emergency" if p.get("emergency") == "yes" else ""
+            lines.append(str(i) + ". **" + p["name"] + "**" + dist + " — " + p["type"] + emerg + phone + addr + maps)
+        nearby_str = "\n".join(lines)
+
+    # Build hospital section separately to avoid nested f-string
+    if nearby_str:
+        hospital_section = (
+            "━━━ HOSPITAL/DOCTOR SEARCH ━━━\n"
+            "REAL NEARBY FACILITIES FOUND (from OpenStreetMap):\n"
+            + nearby_str +
+            "\n\nPresent these as a clean numbered list. Tell user they can click Google Maps links "
+            "for directions, reviews, and phone numbers. For specialists, add what to look for when choosing."
+        )
     else:
-        sources = ["memory"]
+        hospital_section = (
+            "━━━ HOSPITAL/DOCTOR SEARCH ━━━\n"
+            "No real-time location data available. Give general guidance on how to find "
+            "hospitals/doctors and what to look for. Ask user to share their city/area."
+        )
 
-    context_str = "\n\n".join(context_parts) if context_parts else "No specific documents available."
+    profile_section  = memory_prompt  if memory_prompt  else "No profile loaded yet."
+    memory_section   = long_term_mem  if long_term_mem  else "No previous sessions remembered yet."
+    context_section  = context_str    if context_str    else "No documents or web results for this query."
 
-    system_prompt = f"""You are MedAI, a compassionate and knowledgeable medical assistant.
-You help patients understand their health, medical reports, and conditions.
+    system_prompt = f"""You are MedAI — an intelligent, warm medical assistant. Think of yourself as a brilliant doctor friend.
 
-{state.get('memory_prompt', '')}
+━━━ CONVERSATION STYLE ━━━
+- Match energy: "hi" → casual reply. Medical question → thorough reply.
+- Never dump health info unless directly relevant.
+- Be conversational, warm, never robotic.
+- Use markdown: **bold** for important things, bullet points for lists.
+- For symptoms: ask ONE clarifying question at a time before giving advice.
+- Offer structured choices when helpful, like:
+  "Which describes it better?
+  🅐 Sharp sudden pain
+  🅑 Dull constant ache
+  🅒 Throbbing pain"
 
-CONTEXT FROM DOCUMENTS/WEB:
-{context_str}
+━━━ SYMPTOM ASSESSMENT ━━━
+When user mentions ANY symptom:
+1. Acknowledge with empathy first
+2. Ask ONE focused follow-up: duration, severity (1-10), location, triggers
+3. After 2-3 exchanges, provide:
+   - 🔍 Possible causes (2-3, not diagnosis)
+   - 🏠 Home care tips right now
+   - ⚠️ Warning signs to watch for
+   - 🩺 "Please see a doctor if..." guidance
+4. Consider their health profile for personalized advice
+5. Never say "I can't diagnose" — just be clear it's guidance not diagnosis
 
-CRITICAL RULES:
-- Always respond in simple, easy-to-understand language
-- Never diagnose definitively — always suggest consulting a doctor
-- If the user has allergies in their profile, never recommend those medications
-- Reference the user's health history naturally when relevant
-- Be warm, supportive, and empathetic
-- For serious symptoms, always say: "Please consult a doctor immediately"
+{hospital_section}
+
+━━━ DOCUMENT SUMMARIZATION ━━━
+If user shares medical text → immediately summarize as:
+**Simple Summary:** (plain English)
+**Key Findings:** (bullets)
+**What's Good ✅** / **What Needs Attention ⚠️** (with Low/Medium/High risk)
+**Next Steps:** (actionable)
+
+━━━ USER PROFILE ━━━
+{profile_section}
+
+━━━ LONG-TERM MEMORY ━━━
+{memory_section}
+
+━━━ DOCUMENT/WEB CONTEXT ━━━
+{context_section}
+
+━━━ RULES ━━━
+- Never definitively diagnose
+- Never suggest medications the user is allergic to
+- For chest pain / can't breathe / severe bleeding → "🚨 Call emergency services immediately"
+- Keep conversation flowing naturally — remember what was said earlier in this conversation
+- After answering, sometimes ask a relevant follow-up: "Does that help? Any other symptoms?"
 """
 
-    messages = [
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=state["query"]),
-    ]
+    # Build full conversation for context (last 12 messages)
+    chat_messages = [SystemMessage(content=system_prompt)]
+    if conv_history:
+        for msg in conv_history[-12:]:
+            if msg.get("role") == "user":
+                chat_messages.append(HumanMessage(content=msg["content"]))
+            elif msg.get("role") == "assistant":
+                from langchain_core.messages import AIMessage
+                chat_messages.append(AIMessage(content=msg["content"]))
+    chat_messages.append(HumanMessage(content=query))
 
-    response = llm.invoke(messages)
-    answer = response.content
+    response = llm.invoke(chat_messages)
+    answer   = response.content
 
-    save_chat_message(state["user_id"], "user", state["query"])
+    save_chat_message(state["user_id"], "user",      query)
     save_chat_message(state["user_id"], "assistant", answer)
 
-    return {
-        "final_answer": answer,
-        "sources_used": sources,
-    }
+    return {"final_answer": answer, "sources_used": sources}
 
 # ─────────────────────────────────────────────
-# NODE 6: Symptom Checker Flow
+# NODE 6: Location Search (OSM)
 # ─────────────────────────────────────────────
-def symptom_checker_node(state: MedAIState) -> dict:
-    """
-    Guided symptom checker. Builds structured context step by step.
-    Always ends with: "Please consult a qualified doctor."
-    """
-    symptom_data = state.get("symptom_data", {})
-    step = state.get("symptom_step", 0)
-    query = state["query"]
+def location_search_node(state: MedAIState) -> dict:
+    """Fetches REAL nearby hospitals using OpenStreetMap — free, no API key."""
+    location_ctx = state.get("location_context", "")
+    if not location_ctx:
+        return {"osm_results": []}
 
-    system = f"""You are a medical symptom assessment assistant.
-Guide the user through structured symptom collection.
-Current step: {step}
-Collected symptoms so far: {symptom_data}
+    # Parse coordinates from location context
+    try:
+        import re
+        lat_match = re.search(r"lat=([\-\d.]+)", location_ctx)
+        lng_match = re.search(r"lng=([\-\d.]+)", location_ctx)
+        if not lat_match or not lng_match:
+            return {"osm_results": []}
+        lat = float(lat_match.group(1))
+        lng = float(lng_match.group(1))
 
-{state.get('memory_prompt', '')}
+        # Determine what type of place to search
+        query_lower = state["query"].lower()
+        search_type = "hospital"
+        if any(w in query_lower for w in ["pharmacy","medicine","drug"]):
+            search_type = "pharmacy"
+        elif any(w in query_lower for w in ["clinic","general","gp","doctor"]):
+            search_type = "clinic"
 
-Steps:
-- Step 0: Ask for chief complaint
-- Step 1: Ask about associated symptoms (fever, cough, pain, etc.)
-- Step 2: Ask about duration and severity (1-10 scale)
-- Step 3: Provide analysis and ALWAYS end with: 
-  "⚠️ This assessment is for informational purposes only. Please consult a qualified doctor for proper diagnosis and treatment."
-
-Keep responses focused and structured. Ask ONE question at a time."""
-
-    messages = [
-        SystemMessage(content=system),
-        HumanMessage(content=query),
-    ]
-
-    response = llm.invoke(messages)
-
-    return {
-        "final_answer": response.content,
-        "symptom_step": min(step + 1, 3),
-        "sources_used": ["memory"],
-    }
+        loop    = asyncio.new_event_loop()
+        results = loop.run_until_complete(search_nearby_places(search_type, lat, lng, radius_km=15))
+        loop.close()
+        return {"osm_results": results}
+    except Exception as e:
+        print(f"[Location] Error: {e}")
+        return {"osm_results": []}
 
 # ─────────────────────────────────────────────
-# NODE 7: Document Summarizer
+# NODE 7: Summarizer
 # ─────────────────────────────────────────────
 def summarize_document_node(state: MedAIState) -> dict:
-    """
-    Converts complex medical reports into:
-    - Simple English
-    - Bullet points
-    - Key risks highlighted
-    """
-    doc_text = state.get("document_text", "")
+    doc_text     = state.get("document_text", "")
     user_context = state.get("memory_prompt", "")
 
     if not doc_text:
-        docs = search(state["user_id"], "medical report blood test")
+        docs     = search(state["user_id"], "medical report blood test")
         doc_text = "\n\n".join(docs) if docs else ""
 
     system = f"""You are a medical report simplification expert.
 {user_context}
+Convert the report into:
+## Simple Summary
+(2-3 lines, plain English)
+## Key Findings
+(bullets)
+## What's Normal ✅ / What Needs Attention ⚠️
+(with risk level: Low / Medium / High)
+## Next Steps
+(simple actionable items)
+Be warm, reassuring."""
 
-Convert the following medical report into:
-1. **Simple Summary** (2-3 lines in plain English, no jargon)
-2. **Key Findings** (bullet points)
-3. **What's Normal** ✅ (bullet points)
-4. **What Needs Attention** ⚠️ (bullet points with risk level: Low/Medium/High)
-5. **Recommended Next Steps** (simple action items)
-
-Be warm and reassuring. Avoid causing unnecessary panic."""
-
-    messages = [
+    response = llm_precise.invoke([
         SystemMessage(content=system),
-        HumanMessage(content=f"Please summarize this medical document:\n\n{doc_text[:4000]}"),
-    ]
+        HumanMessage(content=f"Summarize:\n\n{doc_text[:4000]}"),
+    ])
 
-    response = llm.invoke(messages)
-
-    save_chat_message(state["user_id"], "user", "Summarize my medical document")
+    save_chat_message(state["user_id"], "user",      "Summarize my medical document")
     save_chat_message(state["user_id"], "assistant", response.content)
 
-    return {
-        "final_answer": response.content,
-        "sources_used": ["rag"],
-    }
+    return {"final_answer": response.content, "sources_used": ["rag"]}
 
 # ─────────────────────────────────────────────
-# ROUTING FUNCTION for Corrective RAG
+# ROUTING
 # ─────────────────────────────────────────────
 def route_after_grading(state: MedAIState) -> str:
-    """
-    Conditional edge: decides whether to use web search or generate directly.
-    """
-    mode = state.get("mode", "chat")
+    mode  = state.get("mode", "chat")
+    score = state.get("relevance_score", 0)
 
-    if mode == "symptom":
-        return "symptom"
     if mode == "summarize":
         return "summarize"
-
-    score = state.get("relevance_score", 0)
+    if state.get("location_context"):
+        return "location_search"
     if score < RELEVANCE_THRESHOLD:
-        print(f"[Router] Low relevance ({score:.2f}) — routing to web search")
         return "web_search"
-    print(f"[Router] Good relevance ({score:.2f}) — generating from RAG")
     return "generate"
