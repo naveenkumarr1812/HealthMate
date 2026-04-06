@@ -1,7 +1,7 @@
 from typing import TypedDict, List, Optional, Annotated
 from langgraph.graph.message import add_messages
 
-class MedAIState(TypedDict):
+class HealthMateState(TypedDict):
     messages:             Annotated[list, add_messages]
     user_id:              str
     query:                str

@@ -40,7 +40,7 @@ export default function Login() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-400 mb-4">
             <Activity className="text-white" size={28} />
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900">Welcome to MedAI</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Welcome to HealthMate</h1>
           <p className="text-gray-500 text-sm mt-1">Your intelligent health assistant</p>
         </div>
 

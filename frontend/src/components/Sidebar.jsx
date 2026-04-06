@@ -61,7 +61,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             <Activity className="text-white" size={16} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">MedAI</p>
+            <p className="text-sm font-semibold text-gray-900">HealthMate</p>
             <p className="text-xs text-gray-400">Health Assistant</p>
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           <div className="w-7 h-7 rounded-lg bg-teal-400 flex items-center justify-center">
             <Activity className="text-white" size={14} />
           </div>
-          <span className="text-sm font-semibold text-gray-900">MedAI</span>
+          <span className="text-sm font-semibold text-gray-900">HealthMate</span>
         </div>
         <span className="text-xs font-medium text-gray-500">{current?.label}</span>
         <button onClick={() => setDrawerOpen(true)} className="text-gray-600 p-1"><Menu size={20} /></button>
@@ -94,7 +94,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-teal-400 flex items-center justify-center"><Activity className="text-white" size={16} /></div>
-                <span className="text-sm font-semibold text-gray-900">MedAI</span>
+                <span className="text-sm font-semibold text-gray-900">HealthMate</span>
               </div>
               <button onClick={() => setDrawerOpen(false)}><X size={18} className="text-gray-400" /></button>
             </div>

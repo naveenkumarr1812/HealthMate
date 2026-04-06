@@ -2,31 +2,42 @@
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
 .venv/
 venv/
+env/
 *.egg-info/
+dist/
+build/
+.pytest_cache/
 
-# Environment
+# Environment (NEVER commit these)
 .env
 .env.local
 .env.production
+.env.*.local
 
 # Frontend
 node_modules/
-dist/
-.vite/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
 
-# FAISS indexes (user data — don't commit)
+# FAISS user data (never commit user embeddings)
 faiss_indexes/
 
 # IDE
 .vscode/
 .idea/
 *.swp
-
-# OS
+*.swo
 .DS_Store
 Thumbs.db
 
 # Logs
 *.log
+logs/
+
+# Docker
+.docker/

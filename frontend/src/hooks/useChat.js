@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { sendChat, getChatHistory } from "../api/medai";
+import { sendChat, getChatHistory } from "../api/HealthMate";
 
 /**
- * useChat — manages all chat state for ChatWindow
+ * useChat - manages all chat state for ChatWindow
  * Handles: history loading, sending messages, mode switching
  */
 export function useChat(userId, mode = "chat") {
@@ -35,7 +35,7 @@ export function useChat(userId, mode = "chat") {
             {
               role: "assistant",
               content:
-                "Hello! I'm **MedAI**, your personal health assistant.\n\nI can help you:\n- Understand your medical reports\n- Check your symptoms step by step\n- Answer health questions with your history in mind\n\nHow can I help you today?",
+                "Hello! I'm **HealthMate**, your personal health assistant.\n\nI can help you:\n- Understand your medical reports\n- Check your symptoms step by step\n- Answer health questions with your history in mind\n\nHow can I help you today?",
               sources: ["memory"],
             },
           ]);
@@ -45,7 +45,7 @@ export function useChat(userId, mode = "chat") {
         setMessages([
           {
             role: "assistant",
-            content: "Hello! I'm MedAI. How can I help you today?",
+            content: "Hello! I'm HealthMate. How can I help you today?",
             sources: ["memory"],
           },
         ]);

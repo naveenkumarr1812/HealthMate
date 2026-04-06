@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import { Send, Plus, Trash2, MessageSquare, Loader2, MapPin,
   FileText, Edit2, Check, X, Menu, Paperclip } from "lucide-react";
 import { supabase } from "../api/supabaseClient";
-import { uploadDocument } from "../api/medai";
+import { uploadDocument } from "../api/HealthMate";
 import axios from "axios";
 
 const API = axios.create({ baseURL: "/api" });
@@ -223,8 +223,8 @@ function ThreadPanel({ userId, activeThreadId, onSelect, onNew, onDeleteThread }
   // Refresh on thread update events
   useEffect(() => {
     const h = () => fetchThreads();
-    window.addEventListener("medai:thread-updated", h);
-    return () => window.removeEventListener("medai:thread-updated", h);
+    window.addEventListener("HealthMate:thread-updated", h);
+    return () => window.removeEventListener("HealthMate:thread-updated", h);
   }, [fetchThreads]);
 
   const rename = async (id) => {
@@ -345,7 +345,7 @@ export default function ChatWindow({ userId }) {
     if (!error && data) {
       setThreadId(data.id);
       setMessages([]);
-      window.dispatchEvent(new Event("medai:thread-updated"));
+      window.dispatchEvent(new Event("HealthMate:thread-updated"));
     }
   }, [userId]);
 
@@ -367,7 +367,7 @@ export default function ChatWindow({ userId }) {
     }
   }, []);
 
-  // Handle deleted thread — load most recent or create new
+  // Handle deleted thread - load most recent or create new
   const handleThreadDeleted = useCallback(async (deletedId) => {
     if (threadId !== deletedId) return;
     const { data } = await supabase
@@ -381,7 +381,7 @@ export default function ChatWindow({ userId }) {
     else createNewThread();
   }, [threadId, userId, loadThread, createNewThread]);
 
-  // On mount — load most recent thread or create one
+  // On mount - load most recent thread or create one
   useEffect(() => {
     if (!userId || threadId) return;
     supabase.from("chat_threads")
@@ -417,14 +417,14 @@ export default function ChatWindow({ userId }) {
     await supabase.from("chat_threads")
       .update({ updated_at: new Date().toISOString() })
       .eq("id", threadId);
-    window.dispatchEvent(new Event("medai:thread-updated"));
+    window.dispatchEvent(new Event("HealthMate:thread-updated"));
   };
 
   const autoName = async (text) => {
     if (!threadId) return;
     const title = text.length > 40 ? text.slice(0, 37) + "..." : text;
     await supabase.from("chat_threads").update({ title }).eq("id", threadId);
-    window.dispatchEvent(new Event("medai:thread-updated"));
+    window.dispatchEvent(new Event("HealthMate:thread-updated"));
   };
 
   const handleFileSelect = (e) => {
@@ -528,7 +528,7 @@ export default function ChatWindow({ userId }) {
       }
     } catch (err) {
       const detail = err.response?.data?.detail || "Something went wrong. Please try again.";
-      setMessages((p) => [...p, { role: "assistant", content: `Sorry — ${detail}`, sources: [] }]);
+      setMessages((p) => [...p, { role: "assistant", content: `Sorry - ${detail}`, sources: [] }]);
     } finally {
       setLoading(false);
       setLocStatus("idle");
@@ -584,7 +584,7 @@ export default function ChatWindow({ userId }) {
             )}
             {locStatus === "denied" && (
               <span className="text-xs text-amber-500 flex items-center gap-1">
-                <MapPin size={11} /> Location unavailable — share your city
+                <MapPin size={11} /> Location unavailable - share your city
               </span>
             )}
           </div>
@@ -660,7 +660,7 @@ export default function ChatWindow({ userId }) {
               onKeyDown={handleKeyDown}
               placeholder={pendingFile
                 ? "Add a message about this file (optional)..."
-                : "Ask anything — symptoms, reports, hospitals, medications..."}
+                : "Ask anything - symptoms, reports, hospitals, medications..."}
               rows={1}
               className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-50 transition leading-relaxed bg-gray-50"
               style={{ minHeight: "42px", maxHeight: "120px" }}

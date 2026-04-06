@@ -1,6 +1,6 @@
 {
-  "name": "MedAI — Health Assistant",
-  "short_name": "MedAI",
+  "name": "HealthMate - Health Assistant",
+  "short_name": "HealthMate",
   "description": "Your intelligent personal medical assistant",
   "start_url": "/",
   "display": "standalone",

@@ -39,7 +39,7 @@ export default function Dashboard() {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden md:mt-0 mt-[52px] mb-[56px] md:mb-0">
-        {/* Topbar — desktop only */}
+        {/* Topbar - desktop only */}
         <div className="hidden md:flex bg-white border-b border-gray-200 px-5 py-3 items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">{TAB_TITLES[activeTab]}</h1>
           <div className="flex items-center gap-2">

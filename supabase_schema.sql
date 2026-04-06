@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════
--- MedAI — Supabase Database Schema
+-- HealthMate - Supabase Database Schema
 -- Run this in your Supabase SQL Editor → New Query
 -- ═══════════════════════════════════════════════════════════════
 
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS chat_history (
 );
 
 -- ───────────────────────────────────────────────────────────────
--- Row Level Security (RLS) — users only see their own data
+-- Row Level Security (RLS) - users only see their own data
 -- ───────────────────────────────────────────────────────────────
 
 ALTER TABLE user_health_profiles ENABLE ROW LEVEL SECURITY;

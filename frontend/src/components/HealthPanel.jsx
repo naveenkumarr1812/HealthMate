@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Heart, TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
-import { getProfile, getPersonalizedNews } from "../api/medai";
+import { getProfile, getPersonalizedNews } from "../api/HealthMate";
 
 function TrendIcon({ trend }) {
   if (trend === "increasing") return <TrendingUp size={12} className="text-red-500" />;
@@ -20,7 +20,7 @@ function MetricRow({ label, value, trend, color = "teal" }) {
         <span className="text-xs text-gray-500">{label}</span>
         <div className="flex items-center gap-1">
           <TrendIcon trend={trend} />
-          <span className="text-xs font-medium text-gray-700">{value || "—"}</span>
+          <span className="text-xs font-medium text-gray-700">{value || "-"}</span>
         </div>
       </div>
       <div className="h-1 bg-gray-100 rounded-full overflow-hidden">

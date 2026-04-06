@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import axios from "axios";
 
 /**
- * useUpload — handles PDF upload with progress tracking
+ * useUpload - handles PDF upload with progress tracking
  * Returns: { upload, progress, uploading, error, result }
  */
 export function useUpload(userId) {

@@ -98,7 +98,7 @@ export default function SymptomChecker({ userId }) {
   useEffect(() => {
     setMessages([{
       role: "assistant",
-      content: "Hi! I'll help you understand your symptoms step by step. 🩺\n\nPlease tell me — **what's your main concern today?** What are you feeling?\n\nYou can type it or pick from the quick options below.",
+      content: "Hi! I'll help you understand your symptoms step by step. 🩺\n\nPlease tell me - **what's your main concern today?** What are you feeling?\n\nYou can type it or pick from the quick options below.",
     }]);
   }, []);
 
@@ -150,7 +150,7 @@ export default function SymptomChecker({ userId }) {
       setIsComplete(is_complete);
     } catch (err) {
       const detail = err.response?.data?.detail || "Something went wrong. Please try again.";
-      setMessages((prev) => [...prev, { role: "assistant", content: `Sorry — ${detail}` }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: `Sorry - ${detail}` }]);
     } finally {
       setLoading(false);
       setTimeout(() => textareaRef.current?.focus(), 50);
@@ -199,7 +199,7 @@ export default function SymptomChecker({ userId }) {
           ))}
         </div>
         <p className="text-xs text-gray-400">
-          Step {Math.min(step + 1, 4)} of 4 — <span className="text-teal-600 font-medium">{STEPS[Math.min(step, 3)]}</span>
+          Step {Math.min(step + 1, 4)} of 4 - <span className="text-teal-600 font-medium">{STEPS[Math.min(step, 3)]}</span>
         </p>
       </div>
 
@@ -207,7 +207,7 @@ export default function SymptomChecker({ userId }) {
       <div className="bg-amber-50 border-b border-amber-100 px-4 py-2 flex items-start gap-2 flex-shrink-0">
         <AlertTriangle size={13} className="text-amber-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-amber-700 leading-relaxed">
-          This is for guidance only — not a medical diagnosis. Always consult a qualified doctor.
+          This is for guidance only - not a medical diagnosis. Always consult a qualified doctor.
         </p>
       </div>
 
@@ -218,7 +218,7 @@ export default function SymptomChecker({ userId }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Symptom chips — shown on step 0 only */}
+      {/* Symptom chips - shown on step 0 only */}
       {step === 0 && !loading && (
         <div className="px-4 pb-2 flex-shrink-0">
           <p className="text-xs text-gray-400 mb-2">Quick select:</p>

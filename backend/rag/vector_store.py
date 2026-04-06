@@ -15,7 +15,7 @@ def get_user_index_path(user_id: str) -> Path:
 def add_document(user_id: str, chunks: list[str], metadata: list[dict]):
     """
     Instantly embeds chunks using FastEmbed and saves to user-specific FAISS index.
-    Called immediately on document upload — persistent across sessions.
+    Called immediately on document upload - persistent across sessions.
     """
     if not chunks:
         return

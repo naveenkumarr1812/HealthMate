@@ -12,11 +12,11 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken:    true,
     persistSession:      true,
     detectSessionInUrl:  true,
-    storageKey:          "medai-auth",
+    storageKey:          "HealthMate-auth",
   },
   global: {
     headers: {
-      "X-Client-Info": "medai-web/1.0",
+      "X-Client-Info": "HealthMate-web/1.0",
     },
   },
   db: {

@@ -310,7 +310,7 @@ function MedModal({ userId, onClose, onSaved, editItem }) {
                 </button>
               </div>
 
-              {/* Gmail time picker — shared with ring time */}
+              {/* Gmail time picker - shared with ring time */}
               {form.gmail_reminder && !form.reminder && (
                 <div className="flex items-center gap-2 ml-10">
                   <Clock size={13} className="text-gray-400" />
@@ -427,7 +427,7 @@ function MedCard({ med, onEdit, onDelete }) {
           )}
         </div>
 
-        {/* Actions — always visible on mobile */}
+        {/* Actions - always visible on mobile */}
         <div className="flex flex-col gap-1 md:opacity-0 md:group-hover:opacity-100 transition flex-shrink-0">
           <button onClick={() => onEdit(med)}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition">

@@ -51,7 +51,7 @@ export default function MedicalNews({ userId }) {
       const genRes = await API.get("/news/medical");
       setGeneralNews(genRes.data.news || []);
 
-      // Fetch personalized — backend reads conditions from Supabase directly
+      // Fetch personalized - backend reads conditions from Supabase directly
       const perRes = await API.get(`/news/personalized/${userId}`);
       setPersonalizedNews(perRes.data.news || []);
       setConditions(perRes.data.conditions || []);

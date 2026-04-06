@@ -81,7 +81,7 @@ async def get_valid_access_token(user_id: str) -> str:
 
     now = datetime.now(timezone.utc)
 
-    # Parse expires_at — always make it timezone-aware
+    # Parse expires_at - always make it timezone-aware
     expires_at_str = row.get("expires_at")
     if expires_at_str:
         expires_at = datetime.fromisoformat(expires_at_str)

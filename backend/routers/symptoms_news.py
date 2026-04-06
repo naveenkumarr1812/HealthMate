@@ -15,14 +15,14 @@ symptom_router = APIRouter(prefix="/symptoms", tags=["Symptoms"])
 news_router    = APIRouter(prefix="/news",     tags=["News"])
 
 # ─────────────────────────────────────────────────────────────
-# SYMPTOM CHECKER — step-by-step guided flow
+# SYMPTOM CHECKER - step-by-step guided flow
 # ─────────────────────────────────────────────────────────────
 
 STEP_INSTRUCTIONS = {
     0: """The user just told you their main complaint. 
 Respond with empathy, then ask ONE focused question to understand better.
 Ask about: location of pain/symptom, or how it started.
-Keep response short — 2-3 lines max.""",
+Keep response short - 2-3 lines max.""",
 
     1: """You now know the main complaint and location/onset.
 Ask ONE question about duration: "How long have you had this?" 
@@ -74,13 +74,13 @@ async def symptom_check(request: SymptomRequest):
 
     step_instruction = STEP_INSTRUCTIONS.get(request.step, STEP_INSTRUCTIONS[3])
 
-    system = f"""You are MedAI, a compassionate medical symptom assessment assistant.
-You are conducting a structured symptom assessment — step {request.step} of 3.
+    system = f"""You are HealthMate, a compassionate medical symptom assessment assistant.
+You are conducting a structured symptom assessment - step {request.step} of 3.
 
 {memory_prompt if memory_prompt else ""}
 
 Collected information so far:
-{request.collected_data if request.collected_data else "Nothing yet — this is the first message."}
+{request.collected_data if request.collected_data else "Nothing yet - this is the first message."}
 
 Your task for this step:
 {step_instruction}

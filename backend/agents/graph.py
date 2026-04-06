@@ -1,5 +1,5 @@
 from langgraph.graph import StateGraph, END
-from agents.state import MedAIState
+from agents.state import HealthMateState
 from agents.nodes import (
     load_user_memory,
     retrieve_docs,
@@ -12,7 +12,7 @@ from agents.nodes import (
 )
 
 def build_graph():
-    graph = StateGraph(MedAIState)
+    graph = StateGraph(HealthMateState)
 
     graph.add_node("load_memory",     load_user_memory)
     graph.add_node("retrieve",        retrieve_docs)

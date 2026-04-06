@@ -82,7 +82,7 @@ table{{width:100%;border-collapse:collapse;margin-bottom:20px}}
   <div class="hdr">
     <div class="icon">💊</div>
     <h1>Medication Reminder</h1>
-    <p>MedAI Health Assistant</p>
+    <p>HealthMate Health Assistant</p>
   </div>
   <div class="body">
     <p class="greeting">Hey! 👋 It's time to take your medication. Consistency is key to your health.</p>
@@ -91,8 +91,8 @@ table{{width:100%;border-collapse:collapse;margin-bottom:20px}}
     <div class="tip">💡 <strong>Tip:</strong> Take your medication at the same time every day for best results!</div>
   </div>
   <div class="ftr">
-    <div><span class="badge">MedAI</span></div>
-    <p>You're receiving this because you enabled email reminders in MedAI.<br>Manage your reminders anytime in the app.</p>
+    <div><span class="badge">HealthMate</span></div>
+    <p>You're receiving this because you enabled email reminders in HealthMate.<br>Manage your reminders anytime in the app.</p>
   </div>
 </div>
 </body>
@@ -103,7 +103,7 @@ table{{width:100%;border-collapse:collapse;margin-bottom:20px}}
 async def send_reminder_email(user_id: str, user_email: str, med_name: str,
                                dosage: str, frequency: str, meal_time: str) -> dict:
     """
-    Core function — gets token, builds email, sends via Gmail API.
+    Core function - gets token, builds email, sends via Gmail API.
     Returns dict with status and detailed error if any.
     """
     print(f"[Email] Attempting to send reminder: {med_name} → {user_email}")
@@ -120,7 +120,7 @@ async def send_reminder_email(user_id: str, user_email: str, med_name: str,
         return {"status": "error", "reason": str(e)}
 
     # 2. Build email
-    subject = f"💊 Time for {med_name} — MedAI Reminder"
+    subject = f"💊 Time for {med_name} - HealthMate Reminder"
     html    = build_reminder_html(med_name, dosage, frequency, meal_time)
 
     msg = MIMEMultipart("alternative")
@@ -144,7 +144,7 @@ async def send_reminder_email(user_id: str, user_email: str, med_name: str,
                 json={"raw": raw},
             )
 
-        print(f"[Email] Gmail API response: {res.status_code} — {res.text[:200]}")
+        print(f"[Email] Gmail API response: {res.status_code} - {res.text[:200]}")
 
         if res.status_code in (200, 202):
             data = res.json()
@@ -187,7 +187,7 @@ async def send_medication_reminder(request: MedicationReminderRequest):
     return result
 
 
-# ── Test endpoint — call this to verify setup ─────────────────
+# ── Test endpoint - call this to verify setup ─────────────────
 @router.post("/medications/test-email")
 async def test_email(user_id: str, email: str):
     """
@@ -219,7 +219,7 @@ async def medication_reminder_scheduler():
 
             if time_now == "00:00":
                 sent_today.clear()
-                print("[Scheduler] Daily reset — cleared sent cache")
+                print("[Scheduler] Daily reset - cleared sent cache")
 
             # Fetch all active meds with gmail_reminder ON
             result = supabase.table("medications").select(
@@ -230,7 +230,7 @@ async def medication_reminder_scheduler():
             due  = [m for m in meds if m.get("reminder_time") == time_now]
 
             if due:
-                print(f"[Scheduler] {time_now} — {len(due)} reminder(s) due")
+                print(f"[Scheduler] {time_now} - {len(due)} reminder(s) due")
 
             for med in due:
                 key = f"{med['id']}-{date_key}"
@@ -245,7 +245,7 @@ async def medication_reminder_scheduler():
                 user_email = token_row.data.get("gmail_email") if token_row.data else None
 
                 if not user_email:
-                    print(f"[Scheduler] No Gmail connected for user {user_id} — skipping")
+                    print(f"[Scheduler] No Gmail connected for user {user_id} - skipping")
                     continue
 
                 await send_reminder_email(

@@ -11,7 +11,7 @@ from memory.user_context import (
     save_chat_message,
 )
 from routers.search import search_nearby_places, duckduckgo_medical_search
-from agents.state import MedAIState
+from agents.state import HealthMateState
 import asyncio
 
 llm = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0.4)
@@ -20,7 +20,7 @@ llm_precise = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0.1)
 # ─────────────────────────────────────────────
 # NODE 1: Load User Memory
 # ─────────────────────────────────────────────
-def load_user_memory(state: MedAIState) -> dict:
+def load_user_memory(state: HealthMateState) -> dict:
     context       = load_user_health_context(state["user_id"])
     memory_prompt = build_memory_system_prompt(context)
     return {"user_health_context": context, "memory_prompt": memory_prompt}
@@ -28,21 +28,21 @@ def load_user_memory(state: MedAIState) -> dict:
 # ─────────────────────────────────────────────
 # NODE 2: Retrieve Documents
 # ─────────────────────────────────────────────
-def retrieve_docs(state: MedAIState) -> dict:
+def retrieve_docs(state: HealthMateState) -> dict:
     docs = search(state["user_id"], state["query"])
     return {"retrieved_docs": docs}
 
 # ─────────────────────────────────────────────
 # NODE 3: Grade Relevance
 # ─────────────────────────────────────────────
-def grade_documents(state: MedAIState) -> dict:
+def grade_documents(state: HealthMateState) -> dict:
     score = grade_document_relevance(state["query"], state["retrieved_docs"])
     return {"relevance_score": score}
 
 # ─────────────────────────────────────────────
 # NODE 4: Web Search (Tavily + DuckDuckGo fallback)
 # ─────────────────────────────────────────────
-def web_search_node(state: MedAIState) -> dict:
+def web_search_node(state: HealthMateState) -> dict:
     query   = state["query"]
     results = tavily_medical_search(query)
 
@@ -58,9 +58,9 @@ def web_search_node(state: MedAIState) -> dict:
     return {"web_results": results, "sources_used": ["web"]}
 
 # ─────────────────────────────────────────────
-# NODE 5: Generate Answer — handles everything
+# NODE 5: Generate Answer - handles everything
 # ─────────────────────────────────────────────
-def generate_answer(state: MedAIState) -> dict:
+def generate_answer(state: HealthMateState) -> dict:
     query         = state["query"]
     memory_prompt = state.get("memory_prompt", "")
     long_term_mem = state.get("long_term_memory", "")
@@ -89,7 +89,7 @@ def generate_answer(state: MedAIState) -> dict:
             dist   = (" (" + str(p["dist_km"]) + " km away)") if p.get("dist_km") else ""
             maps   = ("\n   🗺️ [Open in Google Maps](" + p["maps_url"] + ")") if p.get("maps_url") else ""
             emerg  = " 🚨 Has Emergency" if p.get("emergency") == "yes" else ""
-            lines.append(str(i) + ". **" + p["name"] + "**" + dist + " — " + p["type"] + emerg + phone + addr + maps)
+            lines.append(str(i) + ". **" + p["name"] + "**" + dist + " - " + p["type"] + emerg + phone + addr + maps)
         nearby_str = "\n".join(lines)
 
     # Build hospital section separately to avoid nested f-string
@@ -112,7 +112,7 @@ def generate_answer(state: MedAIState) -> dict:
     memory_section   = long_term_mem  if long_term_mem  else "No previous sessions remembered yet."
     context_section  = context_str    if context_str    else "No documents or web results for this query."
 
-    system_prompt = f"""You are MedAI — an intelligent, warm medical assistant. Think of yourself as a brilliant doctor friend.
+    system_prompt = f"""You are HealthMate - an intelligent, warm medical assistant. Think of yourself as a brilliant doctor friend.
 
 ━━━ CONVERSATION STYLE ━━━
 - Match energy: "hi" → casual reply. Medical question → thorough reply.
@@ -136,7 +136,7 @@ When user mentions ANY symptom:
    - ⚠️ Warning signs to watch for
    - 🩺 "Please see a doctor if..." guidance
 4. Consider their health profile for personalized advice
-5. Never say "I can't diagnose" — just be clear it's guidance not diagnosis
+5. Never say "I can't diagnose" - just be clear it's guidance not diagnosis
 
 {hospital_section}
 
@@ -160,7 +160,7 @@ If user shares medical text → immediately summarize as:
 - Never definitively diagnose
 - Never suggest medications the user is allergic to
 - For chest pain / can't breathe / severe bleeding → "🚨 Call emergency services immediately"
-- Keep conversation flowing naturally — remember what was said earlier in this conversation
+- Keep conversation flowing naturally - remember what was said earlier in this conversation
 - After answering, sometimes ask a relevant follow-up: "Does that help? Any other symptoms?"
 """
 
@@ -186,8 +186,8 @@ If user shares medical text → immediately summarize as:
 # ─────────────────────────────────────────────
 # NODE 6: Location Search (OSM)
 # ─────────────────────────────────────────────
-def location_search_node(state: MedAIState) -> dict:
-    """Fetches REAL nearby hospitals using OpenStreetMap — free, no API key."""
+def location_search_node(state: HealthMateState) -> dict:
+    """Fetches REAL nearby hospitals using OpenStreetMap - free, no API key."""
     location_ctx = state.get("location_context", "")
     if not location_ctx:
         return {"osm_results": []}
@@ -221,7 +221,7 @@ def location_search_node(state: MedAIState) -> dict:
 # ─────────────────────────────────────────────
 # NODE 7: Summarizer
 # ─────────────────────────────────────────────
-def summarize_document_node(state: MedAIState) -> dict:
+def summarize_document_node(state: HealthMateState) -> dict:
     doc_text     = state.get("document_text", "")
     user_context = state.get("memory_prompt", "")
 
@@ -255,7 +255,7 @@ Be warm, reassuring."""
 # ─────────────────────────────────────────────
 # ROUTING
 # ─────────────────────────────────────────────
-def route_after_grading(state: MedAIState) -> str:
+def route_after_grading(state: HealthMateState) -> str:
     mode  = state.get("mode", "chat")
     score = state.get("relevance_score", 0)
 

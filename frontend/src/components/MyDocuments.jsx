@@ -202,7 +202,7 @@ function AddModal({ userId, onClose, onSaved, editItem }) {
                 ) : (
                   <div className="text-xs text-gray-400">
                     <Upload size={18} className="mx-auto mb-1 text-gray-300" />
-                    Click to choose — PDF, images, Word docs, any format
+                    Click to choose - PDF, images, Word docs, any format
                   </div>
                 )}
               </div>
@@ -218,7 +218,7 @@ function AddModal({ userId, onClose, onSaved, editItem }) {
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Note content</label>
               <textarea value={note} onChange={(e) => setNote(e.target.value)}
-                placeholder="Write anything — symptoms, doctor instructions, medication notes..."
+                placeholder="Write anything - symptoms, doctor instructions, medication notes..."
                 rows={5}
                 className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm resize-none focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-50 transition" />
             </div>
@@ -493,7 +493,7 @@ export default function MyDocuments({ userId }) {
             </p>
             <p className="text-xs text-gray-400 mt-1 mb-4">
               {items.length === 0
-                ? "Upload files or write notes — prescriptions, lab reports, doctor notes..."
+                ? "Upload files or write notes - prescriptions, lab reports, doctor notes..."
                 : "Try a different search or category"}
             </p>
             {items.length === 0 && (

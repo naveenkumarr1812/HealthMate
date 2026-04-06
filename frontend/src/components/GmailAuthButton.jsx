@@ -45,7 +45,7 @@ export default function GmailAuthButton({ userId, onStatusChange }) {
         const expires  = new Date(data.expires_at);
         const now      = new Date();
         if (expires <= now) {
-          // Token expired — backend will refresh automatically on next use
+          // Token expired - backend will refresh automatically on next use
           // But still show as connected since refresh_token exists
         }
       }
@@ -88,7 +88,7 @@ export default function GmailAuthButton({ userId, onStatusChange }) {
     const popup = window.open(url, "gmail_auth",
       `width=520,height=640,scrollbars=yes,resizable=yes,left=${left},top=${top}`);
     if (!popup) {
-      // Popup blocked — redirect in same window
+      // Popup blocked - redirect in same window
       window.location.href = url;
     }
   };

@@ -1,153 +1,193 @@
-# MedAI — Intelligent Medical Assistant
+# HealthMate - Intelligent Medical Assistant
 
-> LangGraph + Corrective RAG + Groq + FAISS + FastEmbed + Supabase + React + Tailwind
+> LangGraph · Corrective RAG · Groq · FAISS · FastEmbed · Supabase · React · Tailwind · PWA
+
+---
+
+## Quick Start (Local Development)
+
+### Prerequisites
+- Python 3.11+
+- Node.js 20+
+- Accounts: Supabase, Groq, Tavily, Google Cloud
+
+### 1. Clone & Setup
+```bash
+git clone <your-repo>
+cd HealthMate
+```
+
+### 2. Supabase Setup
+1. Create project at [supabase.com](https://supabase.com)
+2. SQL Editor → Run `supabase_complete_fix.sql` (complete DB setup)
+3. Storage → Verify `medical-documents` bucket exists
+4. Settings → API → Copy URL, anon key, service_role key
+
+### 3. Backend
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # Mac/Linux
+
+pip install -r requirements.txt
+
+cp .env.example .env
+# Fill in all values in .env
+
+python main.py
+# → http://localhost:8000
+# → http://localhost:8000/docs  (API docs)
+```
+
+### 4. Frontend
+```bash
+cd frontend
+npm install
+
+cp .env.example .env
+# Fill in Supabase URL, anon key, Google client ID
+
+npm run dev
+# → http://localhost:5173
+```
+
+---
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+| Variable | Description | Get from |
+|---|---|---|
+| `GROQ_API_KEY` | Groq LLM API key | [console.groq.com](https://console.groq.com) |
+| `TAVILY_API_KEY` | Web search API key | [tavily.com](https://app.tavily.com) |
+| `SUPABASE_URL` | Supabase project URL | Supabase → Settings → API |
+| `SUPABASE_ANON_KEY` | Supabase anon key | Supabase → Settings → API |
+| `SUPABASE_SERVICE_KEY` | Service role key | Supabase → Settings → API |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth secret | Google Cloud Console |
+| `GMAIL_REDIRECT_URI` | OAuth callback URL | `http://localhost:5173/gmail-callback` |
+| `FRONTEND_URL` | Production frontend URL | Your domain |
+
+### Frontend (`frontend/.env`)
+| Variable | Description |
+|---|---|
+| `VITE_SUPABASE_URL` | Same as backend SUPABASE_URL |
+| `VITE_SUPABASE_ANON_KEY` | Same as backend SUPABASE_ANON_KEY |
+| `VITE_GOOGLE_CLIENT_ID` | Same as backend GOOGLE_CLIENT_ID |
 
 ---
 
 ## Features
 
-- **Corrective RAG** — Grades doc relevance; falls back to Tavily web search if docs are insufficient
-- **Instant Embeddings** — FastEmbed + FAISS: embedded the moment you upload, persists forever
-- **Personalized Health Memory** — Remembers your conditions, allergies, report trends across sessions
-- **Symptom Checker** — Guided 4-step flow; always ends with doctor recommendation
-- **Document Summarizer** — Complex reports → simple English + bullet points + risk flags
-- **Medical News** — Tavily-powered live news, personalized to your conditions
-- **Auth** — Supabase Auth (email/password) with per-user data isolation
+| Feature | Description |
+|---|---|
+| **AI Chat** | Conversational medical assistant with memory |
+| **Symptom Checker** | 4-step guided symptom assessment |
+| **Hospital Search** | Real nearby hospitals via OpenStreetMap GPS |
+| **Document Upload** | PDF/image upload → AI analysis |
+| **Doc Summarizer** | Complex reports → simple English |
+| **Medical News** | Personalized news per condition via Tavily |
+| **Health Profile** | Persistent conditions & allergies |
+| **Medication Tracker** | Ring + Gmail reminders |
+| **My Documents** | Secure file storage via Supabase Storage |
+| **PWA** | Install as mobile/desktop app |
+| **Long-term Memory** | Remembers health context across sessions |
 
 ---
 
-## Project Structure
+## Architecture
 
 ```
-medai/
-├── backend/           # FastAPI + LangGraph + Groq
-│   ├── main.py
-│   ├── config.py
-│   ├── requirements.txt
-│   ├── agents/        # LangGraph graph, nodes, state
-│   ├── rag/           # FAISS vector store, corrective RAG, Tavily
-│   ├── memory/        # User health context engine
-│   ├── routers/       # FastAPI endpoints
-│   └── db/            # Supabase client
-├── frontend/          # React + Tailwind + Vite
-│   ├── src/
-│   │   ├── pages/     # Login, Signup, Dashboard
-│   │   ├── components/ # ChatWindow, SymptomChecker, DocSummarizer, etc.
-│   │   ├── context/   # AuthContext
-│   │   └── api/       # axios calls + supabase client
-└── supabase_schema.sql
+User
+ │
+ ▼
+React + Tailwind (PWA)
+ │ axios /api/*
+ ▼
+FastAPI + Middleware (JWT auth)
+ │
+ ├── LangGraph Pipeline
+ │    ├── load_memory (Supabase profile)
+ │    ├── retrieve_docs (FAISS + FastEmbed)
+ │    ├── grade_docs (Corrective RAG)
+ │    ├── web_search (Tavily / DuckDuckGo)
+ │    ├── location_search (OpenStreetMap)
+ │    └── generate_answer (Groq llama-3.3-70b)
+ │
+ ├── Supabase
+ │    ├── Auth (JWT)
+ │    ├── PostgreSQL (profiles, chats, meds)
+ │    └── Storage (medical documents)
+ │
+ └── Background Scheduler
+      └── Gmail medication reminders (every 60s)
 ```
 
 ---
 
-## Setup Guide
+## Deployment
 
-### Step 1 — Supabase
-
-1. Create a project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** → **New Query**
-3. Paste and run the contents of `supabase_schema.sql`
-4. Go to **Project Settings → API** and copy:
-   - `Project URL`
-   - `anon public` key
-   - `service_role` key (keep this secret!)
-
-### Step 2 — Get API Keys
-
-- **Groq**: [console.groq.com](https://console.groq.com) → Create API Key
-- **Tavily**: [tavily.com](https://tavily.com) → Get API Key
-
-### Step 3 — Backend Setup
-
+### Option A - Docker (Recommended)
 ```bash
-cd medai/backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+# Fill in backend/.env with production values
+# Update FRONTEND_URL, GMAIL_REDIRECT_URI to your domain
 
-# Create .env from template
-cp .env.example .env
-# Fill in your keys in .env
+docker-compose up -d --build
 
-# Run the server
-python main.py
-# OR
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+# Logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
 ```
 
-Backend runs at: `http://localhost:8000`
-API docs at: `http://localhost:8000/docs`
+### Option B - Render.com (Free tier)
+**Backend:**
+1. New → Web Service → Python
+2. Build: `pip install -r requirements.txt`
+3. Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+4. Add all env vars
 
-### Step 4 — Frontend Setup
+**Frontend:**
+1. New → Static Site → Node
+2. Build: `npm install && npm run build`
+3. Output: `dist`
+4. Add env vars
 
+### Option C - Railway
 ```bash
-cd medai/frontend
-npm install
-
-# Create .env from template
-cp .env.example .env
-# Fill in Supabase URL and anon key
-
-npm run dev
+# Install Railway CLI
+npm install -g @railway/cli
+railway login
+railway new
+railway up
 ```
 
-Frontend runs at: `http://localhost:5173`
-
----
-
-## LangGraph Flow
-
-```
-User Query
-    │
-    ▼
-load_user_memory          ← Loads conditions, allergies, trends from Supabase
-    │
-    ▼
-retrieve_docs             ← Searches user's FAISS index with FastEmbed
-    │
-    ▼
-grade_documents           ← Corrective RAG: scores doc relevance (0.0–1.0)
-    │
-    ├── score < 0.5 ──→ web_search (Tavily) ──→ generate_answer
-    ├── score ≥ 0.5 ──────────────────────────→ generate_answer
-    ├── mode=symptom ──────────────────────────→ symptom_checker
-    └── mode=summarize ────────────────────────→ summarize_document
-```
-
----
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/signup` | Register new user |
-| POST | `/auth/login` | Login, get JWT |
-| GET | `/auth/profile/{user_id}` | Get health profile |
-| PUT | `/auth/profile` | Update conditions/allergies |
-| POST | `/chat` | Main chat (RAG + memory) |
-| GET | `/chat/history/{user_id}` | Chat history |
-| POST | `/documents/upload` | Upload + embed PDF |
-| GET | `/documents/list/{user_id}` | List uploaded docs |
-| POST | `/documents/summarize` | Summarize pasted text |
-| POST | `/symptoms/check` | Guided symptom check |
-| GET | `/news/medical` | General medical news |
-| GET | `/news/personalized/{user_id}` | Condition-specific news |
+### Production Checklist
+- [ ] Run `supabase_complete_fix.sql` on production Supabase
+- [ ] Update `GMAIL_REDIRECT_URI` to production domain
+- [ ] Add production domain to Google OAuth allowed origins
+- [ ] Add production domain to Supabase CORS settings
+- [ ] Set `ENV=production` in backend .env
+- [ ] Set `FRONTEND_URL` to your frontend domain in backend .env
+- [ ] Supabase Storage → CORS → add your domain
 
 ---
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
+| Layer | Technology |
+|---|---|
 | LLM | Groq (llama-3.3-70b-versatile) |
 | Orchestration | LangGraph StateGraph |
-| RAG Framework | LangChain |
+| RAG | LangChain + Corrective RAG |
 | Embeddings | FastEmbed (BAAI/bge-small-en-v1.5) |
 | Vector DB | FAISS (per-user, persistent) |
-| Web Search | Tavily API |
+| Web Search | Tavily API + DuckDuckGo |
+| Location | OpenStreetMap Overpass API (free) |
 | Backend | FastAPI + Uvicorn |
-| Auth + DB | Supabase (PostgreSQL + Auth) |
+| Auth + DB | Supabase (PostgreSQL + Auth + Storage) |
 | Frontend | React 18 + Vite |
 | Styling | Tailwind CSS |
-| PDF Parsing | PyMuPDF (fitz) |
+| PDF Parsing | PyMuPDF |
+| Gmail | Gmail API (OAuth 2.0) |
+| PWA | Service Worker + Web App Manifest |

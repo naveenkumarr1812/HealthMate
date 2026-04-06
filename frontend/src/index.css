@@ -5,32 +5,67 @@
 @tailwind utilities;
 
 @layer base {
-  * { box-sizing: border-box; }
-  html, body, #root { height: 100%; margin: 0; padding: 0; }
-  body { font-family: 'Inter', system-ui, sans-serif; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html {
+    height: -webkit-fill-available;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+  }
+  #root {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
 }
 
-/* Scrollbar styling */
+/* Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
-/* Textarea auto-resize helper */
-textarea { field-sizing: content; }
-
-/* Prose override for markdown */
-.prose pre { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
-.prose code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; font-size: 0.8em; }
-
 /* Mobile safe area for bottom nav */
 .safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
-/* Ensure full height on mobile */
-html { height: -webkit-fill-available; }
-body { min-height: -webkit-fill-available; }
-#root { min-height: -webkit-fill-available; }
+/* Prevent overflow on mobile */
+img, video, svg { max-width: 100%; }
 
-/* Prevent horizontal overflow on mobile */
-* { max-width: 100%; }
-img, video { max-width: 100%; height: auto; }
+/* Prose fix for markdown */
+.prose pre {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+}
+.prose code {
+  background: #f0fdfa;
+  color: #0f6e56;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+.prose a { color: #1d9e75; }
+.prose h1, .prose h2, .prose h3 { margin-top: 1rem; margin-bottom: 0.5rem; }
+.prose ul, .prose ol { padding-left: 1.25rem; }
+
+/* PWA install prompt animation */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.slide-up { animation: slideUp 0.3s ease-out; }
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid #1d9e75;
+  outline-offset: 2px;
+}

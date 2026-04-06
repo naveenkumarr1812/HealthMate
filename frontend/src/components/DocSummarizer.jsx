@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Upload, FileText, Loader2, Sparkles, AlertCircle,
   StickyNote, ChevronRight, X, FolderOpen } from "lucide-react";
-import { uploadDocument, summarizeText } from "../api/medai";
+import { uploadDocument, summarizeText } from "../api/HealthMate";
 import { supabase } from "../api/supabaseClient";
 
 const BUCKET = "medical-documents";
@@ -23,7 +23,7 @@ function SavedDocPicker({ userId, onSelect }) {
       onSelect(item.note_content || "", item.title);
       return;
     }
-    // File — download and extract text via summarizeText endpoint
+    // File - download and extract text via summarizeText endpoint
     if (!item.file_path) return;
     try {
       const { data: fileBlob } = await supabase.storage.from(BUCKET).download(item.file_path);
@@ -211,7 +211,7 @@ export default function DocSummarizer({ userId }) {
             <div className="flex items-center gap-2 mb-4">
               <Sparkles size={15} className="text-teal-500" />
               <h3 className="text-sm font-semibold text-gray-900">Summary</h3>
-              {activeTitle && <span className="text-xs text-gray-400">— {activeTitle}</span>}
+              {activeTitle && <span className="text-xs text-gray-400">- {activeTitle}</span>}
               <button onClick={clearAll} className="ml-auto text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
                 <X size={12} />Clear
               </button>

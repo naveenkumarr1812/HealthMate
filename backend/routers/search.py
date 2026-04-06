@@ -90,7 +90,7 @@ async def duckduckgo_medical_search(query: str) -> list[str]:
                     "no_html": "1",
                     "skip_disambig": "1",
                 },
-                headers={"User-Agent": "MedAI/1.0"}
+                headers={"User-Agent": "HealthMate/1.0"}
             )
         if res.status_code == 200:
             data = res.json()
