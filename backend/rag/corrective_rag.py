@@ -1,5 +1,5 @@
 from langchain_groq import ChatGroq
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from tavily import TavilyClient
 from config import GROQ_API_KEY, TAVILY_API_KEY, GROQ_MODEL, RELEVANCE_THRESHOLD
 

@@ -67,7 +67,7 @@ def extract_and_update_health_info(user_id: str, llm, document_text: str):
     Uses LLM to auto-extract health info from uploaded reports and
     updates the user's health profile in Supabase.
     """
-    from langchain.prompts import PromptTemplate
+    from langchain_core.prompts import PromptTemplate
     from langchain_core.output_parsers import JsonOutputParser
 
     extract_prompt = PromptTemplate.from_template("""
