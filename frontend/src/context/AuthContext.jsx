@@ -4,13 +4,13 @@ import { supabase } from "../api/supabaseClient";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check existing session
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session?.user) {
         setUser(session.user);
         localStorage.setItem("access_token", session.access_token);
         localStorage.setItem("user_id", session.user.id);
@@ -18,25 +18,30 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        setUser(session.user);
-        localStorage.setItem("access_token", session.access_token);
-        localStorage.setItem("user_id", session.user.id);
-      } else {
-        setUser(null);
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_id");
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          setUser(session.user);
+          localStorage.setItem("access_token", session.access_token);
+          localStorage.setItem("user_id", session.user.id);
+        } else {
+          setUser(null);
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("user_id");
+          localStorage.removeItem("user_name");
+        }
       }
-    });
+    );
 
-    return () => listener.subscription.unsubscribe();
+    return () => subscription.unsubscribe();
   }, []);
 
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    localStorage.clear();
+    window.location.href = "/login";
   };
 
   return (
@@ -46,4 +51,8 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+};

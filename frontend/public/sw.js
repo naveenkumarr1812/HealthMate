@@ -1,34 +1,51 @@
-const CACHE_NAME = "medai-v1";
-const STATIC_ASSETS = ["/", "/index.html", "/manifest.json"];
+// Service Worker v2 — cache disabled for development
+// Only cache truly static assets, never Supabase or API calls
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
+const CACHE_NAME = "medai-v2";
+const NEVER_CACHE = [
+  "supabase.co",
+  "localhost:8000",
+  "/api/",
+  "storage/v1",
+  "rest/v1",
+];
+
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
+  // Clear ALL old caches on activate
   e.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+      Promise.all(keys.map((k) => {
+        console.log("[SW] Deleting cache:", k);
+        return caches.delete(k);
+      }))
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (e) => {
-  // API calls — always network first
-  if (e.request.url.includes("/api/")) {
-    e.respondWith(fetch(e.request).catch(() => new Response("Offline", { status: 503 })));
+  const url = e.request.url;
+
+  // NEVER cache these — always go to network
+  if (NEVER_CACHE.some((pattern) => url.includes(pattern))) {
+    e.respondWith(fetch(e.request));
     return;
   }
-  // Static assets — cache first
+
+  // For everything else — network first, cache as fallback
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request).then((res) => {
-      const clone = res.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
-      return res;
-    }))
+    fetch(e.request)
+      .then((res) => {
+        // Only cache successful GET requests for static assets
+        if (e.request.method === "GET" && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+        }
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
