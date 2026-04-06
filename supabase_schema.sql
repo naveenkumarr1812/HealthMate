@@ -1,86 +1,114 @@
--- ═══════════════════════════════════════════════════════════════
--- HealthMate - Supabase Database Schema
--- Run this in your Supabase SQL Editor → New Query
--- ═══════════════════════════════════════════════════════════════
+-- Enable UUID function
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 1. User Health Profiles
--- Auto-created on signup, updated by LLM on document upload
-CREATE TABLE IF NOT EXISTS user_health_profiles (
-  user_id       UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
-  conditions    TEXT[]  DEFAULT '{}',
-  allergies     TEXT[]  DEFAULT '{}',
-  sugar_trend   TEXT    DEFAULT 'unknown',
-  bp_trend      TEXT    DEFAULT 'unknown',
-  recent_reports_summary TEXT DEFAULT '',
-  updated_at    TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public.chat_history (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  role text NOT NULL CHECK (role = ANY (ARRAY['user'::text, 'assistant'::text])),
+  content text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT chat_history_pkey PRIMARY KEY (id),
+  CONSTRAINT chat_history_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 
--- 2. Documents metadata
--- FAISS embeddings stored separately on disk per user
-CREATE TABLE IF NOT EXISTS documents (
-  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id       UUID REFERENCES auth.users ON DELETE CASCADE,
-  filename      TEXT NOT NULL,
-  summary       TEXT DEFAULT '',
-  chunk_count   INT  DEFAULT 0,
-  uploaded_at   TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public.chat_threads (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  title text DEFAULT 'New conversation'::text,
+  updated_at timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT chat_threads_pkey PRIMARY KEY (id),
+  CONSTRAINT chat_threads_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 
--- 3. Chat History
--- Persisted per user for memory continuity
-CREATE TABLE IF NOT EXISTS chat_history (
-  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id       UUID REFERENCES auth.users ON DELETE CASCADE,
-  role          TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
-  content       TEXT NOT NULL,
-  created_at    TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public.chat_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  thread_id uuid NOT NULL,
+  role text NOT NULL CHECK (role = ANY (ARRAY['user'::text, 'assistant'::text])),
+  content text NOT NULL,
+  location_used boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT chat_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT chat_messages_thread_id_fkey FOREIGN KEY (thread_id) REFERENCES public.chat_threads(id)
 );
 
--- ───────────────────────────────────────────────────────────────
--- Row Level Security (RLS) - users only see their own data
--- ───────────────────────────────────────────────────────────────
+CREATE TABLE public.documents (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  filename text NOT NULL,
+  summary text DEFAULT ''::text,
+  chunk_count integer DEFAULT 0,
+  uploaded_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT documents_pkey PRIMARY KEY (id),
+  CONSTRAINT documents_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
 
-ALTER TABLE user_health_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE documents             ENABLE ROW LEVEL SECURITY;
-ALTER TABLE chat_history          ENABLE ROW LEVEL SECURITY;
+CREATE TABLE public.gmail_tokens (
+  user_id uuid NOT NULL,
+  gmail_email text NOT NULL,
+  access_token text NOT NULL,
+  refresh_token text,
+  expires_at timestamp with time zone,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT gmail_tokens_pkey PRIMARY KEY (user_id),
+  CONSTRAINT gmail_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
 
--- Health Profiles
-CREATE POLICY "Users can view their own profile"
-  ON user_health_profiles FOR SELECT
-  USING (auth.uid() = user_id);
+CREATE TABLE public.medications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  name text NOT NULL,
+  dosage text DEFAULT ''::text,
+  type text DEFAULT 'Tablet'::text,
+  frequency text DEFAULT 'Once daily'::text,
+  meal_time text DEFAULT 'After meal'::text,
+  start_date date,
+  end_date date,
+  status text DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'completed'::text, 'stopped'::text, 'as_needed'::text])),
+  prescribed_by text DEFAULT ''::text,
+  notes text DEFAULT ''::text,
+  reminder boolean DEFAULT false,
+  reminder_time text DEFAULT '08:00'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  gmail_reminder boolean DEFAULT false,
+  CONSTRAINT medications_pkey PRIMARY KEY (id),
+  CONSTRAINT medications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
 
-CREATE POLICY "Users can update their own profile"
-  ON user_health_profiles FOR UPDATE
-  USING (auth.uid() = user_id);
+CREATE TABLE public.user_documents (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  title text NOT NULL,
+  category text DEFAULT 'Other'::text,
+  type text NOT NULL CHECK (type = ANY (ARRAY['file'::text, 'note'::text])),
+  file_path text,
+  file_name text,
+  file_size bigint DEFAULT 0,
+  file_type text,
+  note_content text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_documents_pkey PRIMARY KEY (id),
+  CONSTRAINT user_documents_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
 
-CREATE POLICY "Service role can do everything on profiles"
-  ON user_health_profiles FOR ALL
-  USING (true)
-  WITH CHECK (true);
+CREATE TABLE public.user_health_profiles (
+  user_id uuid NOT NULL,
+  conditions text[] DEFAULT '{}'::text[],
+  allergies text[] DEFAULT '{}'::text[],
+  sugar_trend text DEFAULT 'unknown'::text,
+  bp_trend text DEFAULT 'unknown'::text,
+  recent_reports_summary text DEFAULT ''::text,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_health_profiles_pkey PRIMARY KEY (user_id),
+  CONSTRAINT user_health_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
 
--- Documents
-CREATE POLICY "Users can view their own documents"
-  ON documents FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Service role can manage documents"
-  ON documents FOR ALL
-  USING (true)
-  WITH CHECK (true);
-
--- Chat History
-CREATE POLICY "Users can view their own chat history"
-  ON chat_history FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Service role can manage chat history"
-  ON chat_history FOR ALL
-  USING (true)
-  WITH CHECK (true);
-
--- ───────────────────────────────────────────────────────────────
--- Indexes for performance
--- ───────────────────────────────────────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_documents_user_id    ON documents(user_id);
-CREATE INDEX IF NOT EXISTS idx_chat_user_id         ON chat_history(user_id);
-CREATE INDEX IF NOT EXISTS idx_chat_created_at      ON chat_history(created_at);
+CREATE TABLE public.user_long_term_memory (
+  user_id uuid NOT NULL,
+  memory_text text DEFAULT ''::text,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_long_term_memory_pkey PRIMARY KEY (user_id),
+  CONSTRAINT user_long_term_memory_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);

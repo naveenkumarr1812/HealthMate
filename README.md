@@ -124,54 +124,6 @@ FastAPI + Middleware (JWT auth)
       └── Gmail medication reminders (every 60s)
 ```
 
----
-
-## Deployment
-
-### Option A - Docker (Recommended)
-```bash
-# Fill in backend/.env with production values
-# Update FRONTEND_URL, GMAIL_REDIRECT_URI to your domain
-
-docker-compose up -d --build
-
-# Logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-```
-
-### Option B - Render.com (Free tier)
-**Backend:**
-1. New → Web Service → Python
-2. Build: `pip install -r requirements.txt`
-3. Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-4. Add all env vars
-
-**Frontend:**
-1. New → Static Site → Node
-2. Build: `npm install && npm run build`
-3. Output: `dist`
-4. Add env vars
-
-### Option C - Railway
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-railway login
-railway new
-railway up
-```
-
-### Production Checklist
-- [ ] Run `supabase_complete_fix.sql` on production Supabase
-- [ ] Update `GMAIL_REDIRECT_URI` to production domain
-- [ ] Add production domain to Google OAuth allowed origins
-- [ ] Add production domain to Supabase CORS settings
-- [ ] Set `ENV=production` in backend .env
-- [ ] Set `FRONTEND_URL` to your frontend domain in backend .env
-- [ ] Supabase Storage → CORS → add your domain
-
----
 
 ## Tech Stack
 
