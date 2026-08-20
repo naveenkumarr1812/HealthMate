@@ -1,10 +1,17 @@
 [build]
-  base = "frontend"
   command = "npm run build"
   publish = "dist"
 
+# Proxy /api/* to the Render backend
 [[redirects]]
   from = "/api/*"
   to = "https://healthmate-e7fy.onrender.com/:splat"
   status = 200
   force = true
+
+# SPA fallback — MUST be last; serves index.html for all non-file routes
+# This prevents the white screen when React Router handles client-side navigation
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
