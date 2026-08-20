@@ -660,7 +660,7 @@ export default function ChatWindow({ userId }) {
               onKeyDown={handleKeyDown}
               placeholder={pendingFile
                 ? "Add a message about this file (optional)..."
-                : "Ask anything - symptoms, reports, hospitals, medications..."}
+                : "Ask anything"}
               rows={1}
               className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-50 transition leading-relaxed bg-gray-50"
               style={{ minHeight: "42px", maxHeight: "120px" }}
