@@ -9,7 +9,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "openai/gpt-oss-20b"
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
 FAISS_DIR = os.getenv("FAISS_DIR", "faiss_indexes")
 CHUNK_SIZE = 500
