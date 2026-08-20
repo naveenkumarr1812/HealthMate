@@ -5,15 +5,14 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 from db.supabase_client import supabase
-from config import GROQ_API_KEY, GROQ_MODEL
+from llm import get_llm
 from routers.gmail_auth import get_valid_access_token
 from datetime import datetime
 
 router = APIRouter(tags=["Memory & Reminders"])
-llm    = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0)
+llm    = get_llm(temperature=0)
 
 # ── Long-term memory ──────────────────────────────────────────
 class MemoryUpdateRequest(BaseModel):

@@ -2,13 +2,13 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from pydantic import BaseModel
 import fitz  # PyMuPDF
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 
 from rag.vector_store import add_document, delete_user_index
 from memory.user_context import extract_and_update_health_info
 from db.supabase_client import supabase
-from config import GROQ_API_KEY, GROQ_MODEL, CHUNK_SIZE, CHUNK_OVERLAP
+from config import CHUNK_SIZE, CHUNK_OVERLAP
+from llm import get_llm
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -17,7 +17,7 @@ splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=CHUNK_OVERLAP,
     separators=["\n\n", "\n", ".", " "],
 )
-llm = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0)
+llm = get_llm(temperature=0)
 
 
 @router.post("/upload")

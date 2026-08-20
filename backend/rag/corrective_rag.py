@@ -1,9 +1,9 @@
-from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from tavily import TavilyClient
-from config import GROQ_API_KEY, TAVILY_API_KEY, GROQ_MODEL, RELEVANCE_THRESHOLD
+from config import TAVILY_API_KEY, RELEVANCE_THRESHOLD
+from llm import get_llm
 
-llm = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0)
+llm = get_llm(temperature=0)
 tavily = TavilyClient(api_key=TAVILY_API_KEY)
 
 GRADER_PROMPT = PromptTemplate.from_template("""

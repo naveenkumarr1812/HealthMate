@@ -1,14 +1,14 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 from rag.corrective_rag import fetch_medical_news
 from memory.user_context import load_user_health_context, build_memory_system_prompt
-from config import GROQ_API_KEY, GROQ_MODEL, TAVILY_API_KEY
+from config import TAVILY_API_KEY
+from llm import get_llm
 from db.supabase_client import supabase
 from tavily import TavilyClient
 
-llm    = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0.4)
+llm    = get_llm(temperature=0.4)
 tavily = TavilyClient(api_key=TAVILY_API_KEY)
 
 symptom_router = APIRouter(prefix="/symptoms", tags=["Symptoms"])

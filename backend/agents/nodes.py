@@ -1,8 +1,5 @@
-import json
-from langchain_groq import ChatGroq
-from langchain_core.messages import SystemMessage, HumanMessage
-
-from config import GROQ_API_KEY, GROQ_MODEL, RELEVANCE_THRESHOLD
+from config import RELEVANCE_THRESHOLD
+from llm import get_llm
 from rag.vector_store import search
 from rag.corrective_rag import grade_document_relevance, tavily_medical_search
 from memory.user_context import (
@@ -14,8 +11,8 @@ from routers.search import search_nearby_places, duckduckgo_medical_search
 from agents.state import HealthMateState
 import asyncio
 
-llm = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0.4)
-llm_precise = ChatGroq(model=GROQ_MODEL, api_key=GROQ_API_KEY, temperature=0.1)
+llm = get_llm(temperature=0.4)
+llm_precise = get_llm(temperature=0.1)
 
 # ─────────────────────────────────────────────
 # NODE 1: Load User Memory
