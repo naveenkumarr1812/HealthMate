@@ -1,0 +1,17 @@
+[build]
+  base    = "frontend"
+  command = "npm run build"
+  publish = "frontend/dist"
+
+# Proxy /api/* requests to the Render backend
+[[redirects]]
+  from   = "/api/*"
+  to     = "https://healthmate-e7fy.onrender.com/:splat"
+  status = 200
+  force  = true
+
+# SPA fallback — keeps React Router working on page refresh/direct URL access
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
