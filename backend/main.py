@@ -20,6 +20,8 @@ ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
+    "http://localhost:5010",
+    "http://127.0.0.1:5010",
 ]
 # Add production URL if set
 PROD_URL = os.getenv("FRONTEND_URL", "")
@@ -31,7 +33,7 @@ if PROD_URL:
 async def lifespan(app: FastAPI):
     print("[HealthMate] Starting up...")
     task = asyncio.create_task(medication_reminder_scheduler())
-    print("[HealthMate] ✅ Medication reminder scheduler started")
+    print("[HealthMate] [OK] Medication reminder scheduler started")
     yield
     print("[HealthMate] Shutting down...")
     task.cancel()

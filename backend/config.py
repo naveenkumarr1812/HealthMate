@@ -11,7 +11,7 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 GROQ_MODEL = "llama-3.3-70b-versatile"
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
-FAISS_DIR = "faiss_indexes"
+FAISS_DIR = os.getenv("FAISS_DIR", "faiss_indexes")
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 TOP_K_DOCS = 5

@@ -92,7 +92,7 @@ async def get_valid_access_token(user_id: str) -> str:
 
     # Token still valid (more than 2 mins remaining)
     if expires_at > now + timedelta(minutes=2):
-        print(f"[Token] ✅ Valid token for user {user_id}, expires {expires_at}")
+        print(f"[Token] [OK] Valid token for user {user_id}, expires {expires_at}")
         return row["access_token"]
 
     print(f"[Token] Token expired for user {user_id}, refreshing...")
@@ -130,5 +130,5 @@ async def get_valid_access_token(user_id: str) -> str:
         "updated_at":   now.isoformat(),
     }).eq("user_id", user_id).execute()
 
-    print(f"[Token] ✅ Token refreshed for user {user_id}")
+    print(f"[Token] [OK] Token refreshed for user {user_id}")
     return new_access

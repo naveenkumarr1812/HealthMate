@@ -148,7 +148,7 @@ async def send_reminder_email(user_id: str, user_email: str, med_name: str,
 
         if res.status_code in (200, 202):
             data = res.json()
-            print(f"[Email] ✅ Sent! Message ID: {data.get('id','?')}")
+            print(f"[Email] [OK] Sent! Message ID: {data.get('id','?')}")
             return {"status": "sent", "message_id": data.get("id")}
         else:
             # Try to parse error
@@ -157,14 +157,14 @@ async def send_reminder_email(user_id: str, user_email: str, med_name: str,
                 reason = err.get("error", {}).get("message", res.text)
             except Exception:
                 reason = res.text
-            print(f"[Email] ❌ Gmail API error: {reason}")
+            print(f"[Email] [ERROR] Gmail API error: {reason}")
             return {"status": "gmail_error", "reason": reason, "code": res.status_code}
 
     except httpx.TimeoutException:
-        print("[Email] ❌ Request timed out")
+        print("[Email] [ERROR] Request timed out")
         return {"status": "timeout"}
     except Exception as e:
-        print(f"[Email] ❌ Exception: {e}")
+        print(f"[Email] [ERROR] Exception: {e}")
         return {"status": "exception", "reason": str(e)}
 
 
@@ -208,7 +208,7 @@ async def medication_reminder_scheduler():
     Sends Gmail reminders for ALL users whose medication time matches now.
     Works even when website/browser is closed.
     """
-    print("[Scheduler] ✅ Medication reminder scheduler started")
+    print("[Scheduler] [OK] Medication reminder scheduler started")
     sent_today: set = set()
 
     while True:
