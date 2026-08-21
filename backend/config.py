@@ -18,12 +18,12 @@ GROQ_API_KEYS = _keys
 GROQ_API_KEY = GROQ_API_KEYS[0] if GROQ_API_KEYS else None
 
 # Models
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "meta-llama/llama-prompt-guard-2-22m")
 GROQ_FALLBACK_MODELS = [
-    "llama-3.1-8b-instant",
-    "llama-3.3-70b-versatile",
-    "mixtral-8x7b-32768",
-    "gemma2-9b-it",
+    "meta-llama/llama-prompt-guard-2-86m",
+    "openai/gpt-oss-20b",
+    "qwen/qwen3.6-27b",
+    "openai/gpt-oss-120b",
 ]
 
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
