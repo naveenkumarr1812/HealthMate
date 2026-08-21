@@ -10,6 +10,7 @@ from memory.user_context import (
 from routers.search import search_nearby_places, duckduckgo_medical_search
 from agents.state import HealthMateState
 import asyncio
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 llm = get_llm(temperature=0.4)
 llm_precise = get_llm(temperature=0.1)
@@ -168,7 +169,6 @@ If user shares medical text → immediately summarize as:
             if msg.get("role") == "user":
                 chat_messages.append(HumanMessage(content=msg["content"]))
             elif msg.get("role") == "assistant":
-                from langchain_core.messages import AIMessage
                 chat_messages.append(AIMessage(content=msg["content"]))
     chat_messages.append(HumanMessage(content=query))
 
