@@ -82,7 +82,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       </aside>
 
       {/* ── Mobile top bar ── */}
-      <div className="md:hidden bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800/80 px-4 py-3 flex items-center justify-between flex-shrink-0 fixed top-0 left-0 right-0 z-30 transition-colors">
+      <div className="md:hidden bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800/80 px-4 py-3 flex items-center justify-between flex-shrink-0 fixed top-0 left-0 right-0 z-30 h-14 transition-colors">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 flex-shrink-0">
             <img src="./icons/icon-96.png" className="w-full h-full object-cover rounded-md shadow-sm" alt="Logo" />

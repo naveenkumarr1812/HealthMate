@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { initPWA } from "./utils/pwaPrompt";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -101,6 +102,9 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initPWA();
+  }, []);
   return (
     <ThemeProvider>
       <ToastProvider>
