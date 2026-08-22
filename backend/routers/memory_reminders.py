@@ -9,7 +9,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from db.supabase_client import supabase
 from llm import get_llm
 from routers.gmail_auth import get_valid_access_token
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 router = APIRouter(tags=["Memory & Reminders"])
 llm    = get_llm(temperature=0)
@@ -212,9 +212,11 @@ async def medication_reminder_scheduler():
 
     while True:
         try:
-            now      = datetime.now()
-            time_now = now.strftime("%H:%M")
-            date_key = now.strftime("%Y-%m-%d")
+            # Check for reminders due 5 minutes in the future (send email 5 mins early)
+            now = datetime.now(timezone.utc)
+            target_time = now + timedelta(minutes=5)
+            time_now = target_time.strftime("%H:%M")
+            date_key = target_time.strftime("%Y-%m-%d")
 
             if time_now == "00:00":
                 sent_today.clear()

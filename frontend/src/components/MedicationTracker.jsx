@@ -5,6 +5,23 @@ import { supabase } from "../api/supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import GmailAuthButton from "./GmailAuthButton";
 
+// Timezone conversion helpers (stores UTC in DB, displays Local in UI)
+function localToUtcTime(localTime) {
+  if (!localTime) return "08:00";
+  const [hours, minutes] = localTime.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
+}
+
+function utcToLocalTime(utcTime) {
+  if (!utcTime) return "08:00";
+  const [hours, minutes] = utcTime.split(":").map(Number);
+  const date = new Date();
+  date.setUTCHours(hours, minutes, 0, 0);
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
 const FREQUENCIES = ["Once daily","Twice daily","Three times daily","Every 8 hours","Every 12 hours","Weekly","As needed","Other"];
 const MEAL_TIMES  = ["Before meal","After meal","With meal","Empty stomach","No restriction"];
 const MED_TYPES   = ["Tablet","Capsule","Syrup","Injection","Inhaler","Drops","Cream/Ointment","Other"];
@@ -78,30 +95,7 @@ function useReminderChecker(userId, meds, userEmail) {
           }
         }
 
-        // Gmail alert
-        if (med.gmail_reminder && userEmail) {
-          const gmailKey = `gmail-${med.id}-${dateKey}-${timeNow}`;
-          if (!notifiedRef.current.has(gmailKey)) {
-            notifiedRef.current.add(gmailKey);
-            try {
-              await fetch("/api/medications/remind", {
-                method: "POST",
-                headers: {
-                  "Content-Type":  "application/json",
-                  "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
-                },
-                body: JSON.stringify({
-                  user_id:         userId,
-                  email:           userEmail,
-                  medication_name: med.name,
-                  dosage:          med.dosage  || "",
-                  frequency:       med.frequency || "",
-                  meal_time:       med.meal_time  || "",
-                }),
-              });
-            } catch (e) { console.warn("Gmail reminder error:", e); }
-          }
-        }
+        // Client-side local notifications are handled above, email reminders are managed exclusively by the backend scheduler.
       }
     };
 
@@ -142,6 +136,13 @@ function MedModal({ userId, onClose, onSaved, editItem }) {
 
     const payload = { ...form, user_id: userId, updated_at: new Date().toISOString() };
     if (!payload.end_date) delete payload.end_date;
+
+    // Convert reminder_time to UTC for background scheduling
+    if (payload.reminder_time) {
+      try {
+        payload.reminder_time = localToUtcTime(payload.reminder_time);
+      } catch (e) { console.warn("Failed to convert time to UTC:", e); }
+    }
 
     const { error: dbErr } = isEdit
       ? await supabase.from("medications").update(payload).eq("id", editItem.id)
@@ -462,7 +463,17 @@ export default function MedicationTracker({ userId }) {
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
-    if (!error) setMeds(data || []);
+    if (!error && data) {
+      const formattedMeds = data.map((m) => {
+        if (m.reminder_time) {
+          try {
+            m.reminder_time = utcToLocalTime(m.reminder_time);
+          } catch (e) { console.warn("Failed to convert time:", e); }
+        }
+        return m;
+      });
+      setMeds(formattedMeds);
+    }
     setLoading(false);
   }, [userId]);
 
