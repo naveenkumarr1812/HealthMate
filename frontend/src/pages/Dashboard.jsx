@@ -36,11 +36,6 @@ export default function Dashboard() {
         {/* Topbar - desktop only */}
         <div className="hidden md:flex bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-5 py-3 items-center justify-between flex-shrink-0 transition-colors">
           <h1 className="text-sm font-semibold text-gray-900 dark:text-slate-100">{TAB_TITLES[activeTab]}</h1>
-          <div className="flex items-center gap-2">
-            <span className="text-xs bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-900/50 px-2.5 py-1 rounded-full font-medium hidden lg:inline">Corrective RAG</span>
-            <span className="text-xs bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50 px-2.5 py-1 rounded-full font-medium hidden lg:inline">Tavily</span>
-            <span className="text-xs bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50 px-2.5 py-1 rounded-full font-medium hidden lg:inline">Groq LLM</span>
-          </div>
         </div>
         
         {/* Persistent tab views to prevent unmounting and state loss */}
