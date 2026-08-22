@@ -11,6 +11,8 @@ const MEAL_TIMES  = ["Before meal","After meal","With meal","Empty stomach","No 
 const MED_TYPES   = ["Tablet","Capsule","Syrup","Injection","Inhaler","Drops","Cream/Ointment","Other"];
 const FILTER_TABS = ["All","Active","As needed","Completed","Stopped"];
 
+const BUCKET = "medical-documents";
+
 // Timezone conversion helpers (stores UTC in DB, displays Local in UI)
 function localToUtcTime(localTime) {
   if (!localTime) return "08:00";
@@ -38,22 +40,62 @@ function statusStyle(s) {
 
 const STATUS_LABEL = { active:"Active", completed:"Completed", stopped:"Stopped", as_needed:"As needed" };
 
-// Alarm sound function
+let audioCtxInstance = null;
+
+function getAudioContext() {
+  if (!audioCtxInstance) {
+    audioCtxInstance = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtxInstance.state === "suspended") {
+    audioCtxInstance.resume().catch((e) => console.warn("Audio resume failed:", e));
+  }
+  return audioCtxInstance;
+}
+
+// Unlock audio context on user interaction to comply with browser autoplay policies
+function initAudioUnlocker() {
+  const unlock = () => {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === "running") {
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+      
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    }
+  };
+  window.addEventListener("click", unlock);
+  window.addEventListener("touchstart", unlock);
+  window.addEventListener("keydown", unlock);
+}
+
+// Alarm sound function with 5 audio context chimes and mobile vibration ring
 function playAlarm() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 0.35, 0.7].forEach((delay) => {
+    const ctx = getAudioContext();
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+    [0, 0.35, 0.7, 1.05, 1.4].forEach((delay) => {
       const osc  = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.frequency.value = 880;
       osc.type = "sine";
-      gain.gain.setValueAtTime(0.5, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.6, ctx.currentTime + delay);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.5);
       osc.start(ctx.currentTime + delay);
       osc.stop(ctx.currentTime + delay + 0.5);
     });
+
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200, 100, 200]);
+    }
   } catch (e) { console.warn("Audio error:", e); }
 }
 
@@ -483,24 +525,59 @@ export default function MedicationTracker({ userId }) {
     setLoading(false);
   }, [userId]);
 
-  useEffect(() => { fetchMeds(); }, [fetchMeds]);
-
-  // Load Adherence log
-  useEffect(() => {
-    const stored = localStorage.getItem(`healthmate_med_adherence_${userId}`);
-    if (stored) {
+  // Fetch and Sync Adherence log (merges localStorage and Supabase Storage data)
+  const fetchAdherence = useCallback(async () => {
+    const localStored = localStorage.getItem(`healthmate_med_adherence_${userId}`);
+    if (localStored) {
       try {
-        setAdherence(JSON.parse(stored));
-      } catch (e) { console.warn("Failed to load adherence:", e); }
+        setAdherence(JSON.parse(localStored));
+      } catch (e) { console.warn("Failed to load local adherence:", e); }
+    }
+
+    try {
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .download(`${userId}/_adherence_logs.json`);
+      if (!error && data) {
+        const text = await data.text();
+        const parsed = JSON.parse(text);
+        const localParsed = localStored ? JSON.parse(localStored) : {};
+        const merged = { ...parsed, ...localParsed };
+        
+        setAdherence(merged);
+        localStorage.setItem(`healthmate_med_adherence_${userId}`, JSON.stringify(merged));
+      }
+    } catch (e) {
+      console.warn("Failed to sync adherence logs from Supabase storage:", e.message);
     }
   }, [userId]);
+
+  const saveAdherenceToDB = async (updatedAdherence) => {
+    try {
+      const blob = new Blob([JSON.stringify(updatedAdherence)], { type: "application/json" });
+      await supabase.storage
+        .from(BUCKET)
+        .upload(`${userId}/_adherence_logs.json`, blob, {
+          cacheControl: "0",
+          upsert: true
+        });
+    } catch (e) {
+      console.warn("Failed to upload adherence logs to DB:", e.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchMeds();
+    fetchAdherence();
+    initAudioUnlocker();
+  }, [fetchMeds, fetchAdherence]);
 
   // Request notifications
   useEffect(() => {
     if (Notification.permission === "default") Notification.requestPermission();
   }, []);
 
-  const toggleAdherence = (medId, status) => {
+  const toggleAdherence = async (medId, status) => {
     const todayLogs = adherence[todayKey] || {};
     const currentStatus = todayLogs[medId];
     
@@ -515,6 +592,7 @@ export default function MedicationTracker({ userId }) {
     
     setAdherence(updated);
     localStorage.setItem(`healthmate_med_adherence_${userId}`, JSON.stringify(updated));
+    await saveAdherenceToDB(updated);
 
     if (newStatus === "taken") {
       addToast(`Logged "${meds.find(m => m.id === medId)?.name}" as taken! 💊`, "success");

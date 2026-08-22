@@ -1,4 +1,4 @@
-const CACHE_VERSION = "HealthMate-v4";
+const CACHE_VERSION = "HealthMate-v5";
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const API_CACHE     = `${CACHE_VERSION}-api`;
 

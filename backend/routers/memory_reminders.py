@@ -42,8 +42,27 @@ Return ONLY the updated memory text."""
 
 
 # ── Build beautiful HTML email ────────────────────────────────
-def build_reminder_html(med_name: str, dosage: str, frequency: str, meal_time: str) -> str:
-    now_str = datetime.now().strftime("%I:%M %p, %d %B %Y")
+def utc_to_ist_time_str(utc_time_str: str) -> str:
+    try:
+        h, m = map(int, utc_time_str.split(":"))
+        utc_dt = datetime.now(timezone.utc).replace(hour=h, minute=m, second=0, microsecond=0)
+        ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+        return ist_dt.strftime("%I:%M %p")
+    except Exception:
+        return utc_time_str
+
+def build_reminder_html(med_name: str, dosage: str, frequency: str, meal_time: str, reminder_time_utc: str = "") -> str:
+    if reminder_time_utc:
+        display_time = utc_to_ist_time_str(reminder_time_utc)
+    else:
+        now_utc = datetime.now(timezone.utc)
+        now_ist = now_utc + timedelta(hours=5, minutes=30)
+        display_time = now_ist.strftime("%I:%M %p")
+
+    now_ist = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+    date_str = now_ist.strftime("%d %B %Y")
+    now_str = f"{display_time}, {date_str}"
+
     rows = ""
     if dosage:    rows += f"<tr><td class='label'>Dosage</td><td class='value'>{dosage}</td></tr>"
     if frequency: rows += f"<tr><td class='label'>Frequency</td><td class='value'>{frequency}</td></tr>"
@@ -100,7 +119,8 @@ table{{width:100%;border-collapse:collapse;margin-bottom:20px}}
 
 # ── Core send function ────────────────────────────────────────
 async def send_reminder_email(user_id: str, user_email: str, med_name: str,
-                               dosage: str, frequency: str, meal_time: str) -> dict:
+                               dosage: str, frequency: str, meal_time: str,
+                               reminder_time_utc: str = "") -> dict:
     """
     Core function - gets token, builds email, sends via Gmail API.
     Returns dict with status and detailed error if any.
@@ -120,7 +140,7 @@ async def send_reminder_email(user_id: str, user_email: str, med_name: str,
 
     # 2. Build email
     subject = f"💊 Time for {med_name} - HealthMate Reminder"
-    html    = build_reminder_html(med_name, dosage, frequency, meal_time)
+    html    = build_reminder_html(med_name, dosage, frequency, meal_time, reminder_time_utc)
 
     msg = MIMEMultipart("alternative")
     msg["To"]      = user_email
@@ -175,6 +195,7 @@ class MedicationReminderRequest(BaseModel):
     dosage: str = ""
     frequency: str = ""
     meal_time: str = ""
+    reminder_time: str = ""
 
 @router.post("/medications/remind")
 async def send_medication_reminder(request: MedicationReminderRequest):
@@ -182,6 +203,7 @@ async def send_medication_reminder(request: MedicationReminderRequest):
         request.user_id, request.email,
         request.medication_name, request.dosage,
         request.frequency, request.meal_time,
+        request.reminder_time,
     )
     return result
 
@@ -195,7 +217,8 @@ async def test_email(user_id: str, email: str):
     """
     result = await send_reminder_email(
         user_id, email,
-        "Test Medication", "500mg", "Once daily", "After meal"
+        "Test Medication", "500mg", "Once daily", "After meal",
+        "02:30"
     )
     return result
 
@@ -212,11 +235,10 @@ async def medication_reminder_scheduler():
 
     while True:
         try:
-            # Check for reminders due 5 minutes in the future (send email 5 mins early)
+            # Check for reminders due at the actual set time
             now = datetime.now(timezone.utc)
-            target_time = now + timedelta(minutes=5)
-            time_now = target_time.strftime("%H:%M")
-            date_key = target_time.strftime("%Y-%m-%d")
+            time_now = now.strftime("%H:%M")
+            date_key = now.strftime("%Y-%m-%d")
 
             if time_now == "00:00":
                 sent_today.clear()
@@ -255,6 +277,7 @@ async def medication_reminder_scheduler():
                     med.get("dosage",""),
                     med.get("frequency",""),
                     med.get("meal_time",""),
+                    med.get("reminder_time",""),
                 )
 
         except Exception as e:
