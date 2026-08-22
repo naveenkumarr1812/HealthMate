@@ -28,18 +28,6 @@ export default function Dashboard() {
     setSearchParams({ tab });
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "chat":        return <ChatWindow userId={userId} />;
-      case "symptom":     return <SymptomChecker userId={userId} />;
-      case "documents":   return <MyDocuments userId={userId} />;
-      case "news":        return <MedicalNews userId={userId} />;
-      case "profile":     return <HealthProfile userId={userId} />;
-      case "medications": return <MedicationTracker userId={userId} />;
-      default:            return <ChatWindow userId={userId} />;
-    }
-  };
-
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -54,7 +42,28 @@ export default function Dashboard() {
             <span className="text-xs bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-1 rounded-full font-medium hidden lg:inline">Groq LLM</span>
           </div>
         </div>
-        <div className="flex-1 overflow-hidden">{renderContent()}</div>
+        
+        {/* Persistent tab views to prevent unmounting and state loss */}
+        <div className="flex-1 overflow-hidden relative">
+          <div className={activeTab === "chat" ? "h-full w-full" : "hidden"}>
+            <ChatWindow userId={userId} />
+          </div>
+          <div className={activeTab === "symptom" ? "h-full w-full" : "hidden"}>
+            <SymptomChecker userId={userId} />
+          </div>
+          <div className={activeTab === "documents" ? "h-full w-full" : "hidden"}>
+            <MyDocuments userId={userId} />
+          </div>
+          <div className={activeTab === "news" ? "h-full w-full" : "hidden"}>
+            <MedicalNews userId={userId} />
+          </div>
+          <div className={activeTab === "profile" ? "h-full w-full" : "hidden"}>
+            <HealthProfile userId={userId} />
+          </div>
+          <div className={activeTab === "medications" ? "h-full w-full" : "hidden"}>
+            <MedicationTracker userId={userId} />
+          </div>
+        </div>
       </div>
     </div>
   );
