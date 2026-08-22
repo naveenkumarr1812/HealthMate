@@ -29,7 +29,7 @@ function PWAInstallBanner() {
     <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-80 bg-white border border-teal-200 rounded-2xl shadow-lg p-4 z-50 slide-up">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 flex-shrink-0">
-          <img src="/icons/icon-96.png" className="w-full h-full object-cover rounded-xl shadow-sm" alt="Logo" />
+          <img src="./icons/icon-96.png" className="w-full h-full object-cover rounded-xl shadow-sm" alt="Logo" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-900">Install HealthMate</p>
@@ -68,7 +68,7 @@ function ProtectedRoute({ children }) {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-950 transition-colors">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-4 animate-pulse">
-            <img src="/icons/icon-192.png" className="w-full h-full object-cover rounded-2xl shadow-md" alt="Logo" />
+            <img src="./icons/icon-192.png" className="w-full h-full object-cover rounded-2xl shadow-md" alt="Logo" />
           </div>
           <p className="text-sm text-gray-500 dark:text-slate-400">Loading HealthMate...</p>
         </div>
@@ -105,9 +105,9 @@ export default function App() {
     <ThemeProvider>
       <ToastProvider>
         <AuthProvider>
-          <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <HashRouter>
             <AppRoutes />
-          </BrowserRouter>
+          </HashRouter>
         </AuthProvider>
       </ToastProvider>
     </ThemeProvider>

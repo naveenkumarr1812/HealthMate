@@ -55,7 +55,7 @@ export default function Signup() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 mb-4">
-            <img src="/icons/icon-192.png" className="w-full h-full object-cover rounded-2xl shadow-sm" alt="Logo" />
+            <img src="./icons/icon-192.png" className="w-full h-full object-cover rounded-2xl shadow-sm" alt="Logo" />
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">Create your account</h1>
           <p className="text-gray-500 text-sm mt-1">Start managing your health smarter</p>

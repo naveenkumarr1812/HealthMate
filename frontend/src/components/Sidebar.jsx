@@ -65,7 +65,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       <aside className="hidden md:flex w-56 lg:w-60 min-h-screen bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex-col flex-shrink-0 transition-colors">
         <div className="px-4 py-4 border-b border-gray-100 dark:border-slate-800/80 flex items-center gap-3">
           <div className="w-8 h-8 flex-shrink-0">
-            <img src="/icons/icon-96.png" className="w-full h-full object-cover rounded-lg shadow-sm" alt="Logo" />
+            <img src="./icons/icon-96.png" className="w-full h-full object-cover rounded-lg shadow-sm" alt="Logo" />
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-900 dark:text-slate-100">HealthMate</p>
@@ -85,7 +85,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       <div className="md:hidden bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800/80 px-4 py-3 flex items-center justify-between flex-shrink-0 fixed top-0 left-0 right-0 z-30 transition-colors">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 flex-shrink-0">
-            <img src="/icons/icon-96.png" className="w-full h-full object-cover rounded-md shadow-sm" alt="Logo" />
+            <img src="./icons/icon-96.png" className="w-full h-full object-cover rounded-md shadow-sm" alt="Logo" />
           </div>
           <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">HealthMate</span>
         </div>
@@ -101,7 +101,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             <div className="px-4 py-4 border-b border-gray-100 dark:border-slate-800/80 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 flex-shrink-0">
-                  <img src="/icons/icon-96.png" className="w-full h-full object-cover rounded-lg shadow-sm" alt="Logo" />
+                  <img src="./icons/icon-96.png" className="w-full h-full object-cover rounded-lg shadow-sm" alt="Logo" />
                 </div>
                 <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">HealthMate</span>
               </div>

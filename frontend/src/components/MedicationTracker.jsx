@@ -123,7 +123,7 @@ function useReminderChecker(userId, meds) {
             if (Notification.permission === "granted") {
               new Notification(`💊 Time for ${med.name}`, {
                 body: `${med.dosage || ""} · ${med.frequency} · ${med.meal_time}`,
-                icon: "/icons/icon-96.png",
+                icon: "./icons/icon-96.png",
               });
             } else if (Notification.permission !== "denied") {
               Notification.requestPermission().then((p) => {
