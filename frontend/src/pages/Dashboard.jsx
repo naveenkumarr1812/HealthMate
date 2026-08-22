@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
 import ChatWindow from "../components/ChatWindow";
@@ -20,7 +21,12 @@ const TAB_TITLES = {
 export default function Dashboard() {
   const { user }  = useAuth();
   const userId    = user?.id || localStorage.getItem("user_id");
-  const [activeTab, setActiveTab] = useState("chat");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "chat";
+
+  const setActiveTab = (tab) => {
+    setSearchParams({ tab });
+  };
 
   const renderContent = () => {
     switch (activeTab) {

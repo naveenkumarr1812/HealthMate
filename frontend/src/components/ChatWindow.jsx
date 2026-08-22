@@ -381,20 +381,11 @@ export default function ChatWindow({ userId }) {
     else createNewThread();
   }, [threadId, userId, loadThread, createNewThread]);
 
-  // On mount - load most recent thread or create one
+  // On mount - always create a new thread to open in a new chat window
   useEffect(() => {
     if (!userId || threadId) return;
-    supabase.from("chat_threads")
-      .select("id")
-      .eq("user_id", userId)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) loadThread(data.id);
-        else createNewThread();
-      });
-  }, [userId]);
+    createNewThread();
+  }, [userId, createNewThread]);
 
   // Scroll to bottom
   useEffect(() => {

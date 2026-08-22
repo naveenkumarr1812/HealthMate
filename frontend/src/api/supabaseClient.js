@@ -23,6 +23,7 @@ try {
         persistSession:     true,
         detectSessionInUrl: true,
         storageKey:         "HealthMate-auth",
+        lock:               async (name, acquireTimeout, fn) => await fn(),
       },
       global: {
         headers: { "X-Client-Info": "HealthMate-web/1.0" },
