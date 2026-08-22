@@ -69,3 +69,10 @@ img, video, svg { max-width: 100%; }
   outline: 2px solid #1d9e75;
   outline-offset: 2px;
 }
+
+/* Toast slide-in animation */
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.animate-slide-in { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }

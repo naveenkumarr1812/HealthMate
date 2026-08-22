@@ -70,18 +70,18 @@ function DocPicker({ userId, onInsert, onClose }) {
   }, [userId]);
 
   return (
-    <div className="border border-gray-200 rounded-2xl bg-white shadow-lg mb-2 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
-        <span className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+    <div className="border border-gray-250 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 shadow-lg mb-2 overflow-hidden transition-colors">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-slate-800/80">
+        <span className="text-xs font-semibold text-gray-600 dark:text-slate-400 flex items-center gap-1.5">
           <FileText size={12} className="text-teal-500" />
           Pick a saved document to summarize
         </span>
-        <button onClick={onClose}><X size={14} className="text-gray-400 hover:text-gray-600" /></button>
+        <button onClick={onClose}><X size={14} className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-350" /></button>
       </div>
       <div className="max-h-52 overflow-y-auto">
-        {loading && <p className="text-xs text-gray-400 text-center py-4">Loading...</p>}
+        {loading && <p className="text-xs text-gray-400 dark:text-slate-500 text-center py-4">Loading...</p>}
         {!loading && docs.length === 0 && (
-          <p className="text-xs text-gray-400 text-center py-4 px-3">
+          <p className="text-xs text-gray-400 dark:text-slate-500 text-center py-4 px-3">
             No saved documents yet. Upload in My Documents first.
           </p>
         )}
@@ -93,13 +93,13 @@ function DocPicker({ userId, onInsert, onClose }) {
                 : `Please summarize my saved document titled "${d.title}" in simple English with key findings and risks.`;
               onInsert(text); onClose();
             }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-teal-50 transition text-left group border-b border-gray-50 last:border-0">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${d.type === "note" ? "bg-yellow-50" : "bg-blue-50"}`}>
+            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-teal-50 dark:hover:bg-teal-950/20 transition text-left group border-b border-gray-50 dark:border-slate-850/50 last:border-0">
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${d.type === "note" ? "bg-yellow-50 dark:bg-yellow-950/25" : "bg-blue-50 dark:bg-blue-950/25"}`}>
               <FileText size={13} className={d.type === "note" ? "text-yellow-500" : "text-blue-500"} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-gray-800 truncate group-hover:text-teal-700">{d.title}</p>
-              <p className="text-xs text-gray-400">{d.category}</p>
+              <p className="text-xs font-medium text-gray-800 dark:text-slate-200 truncate group-hover:text-teal-700 dark:group-hover:text-teal-400">{d.title}</p>
+              <p className="text-xs text-gray-400 dark:text-slate-500">{d.category}</p>
             </div>
           </button>
         ))}
@@ -111,11 +111,11 @@ function DocPicker({ userId, onInsert, onClose }) {
 // ── File Upload Preview ──────────────────────────────────────
 function FileUploadPreview({ file, onRemove }) {
   return (
-    <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-xl px-3 py-2 mb-2">
-      <Paperclip size={14} className="text-teal-600 flex-shrink-0" />
-      <span className="text-xs text-teal-700 font-medium truncate flex-1">{file.name}</span>
-      <span className="text-xs text-teal-500">{(file.size / 1024).toFixed(0)}KB</span>
-      <button onClick={onRemove}><X size={13} className="text-teal-400 hover:text-teal-700" /></button>
+    <div className="flex items-center gap-2 bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-900/50 rounded-xl px-3 py-2 mb-2">
+      <Paperclip size={14} className="text-teal-600 dark:text-teal-400 flex-shrink-0" />
+      <span className="text-xs text-teal-700 dark:text-teal-300 font-medium truncate flex-1">{file.name}</span>
+      <span className="text-xs text-teal-500 dark:text-teal-400">{(file.size / 1024).toFixed(0)}KB</span>
+      <button onClick={onRemove}><X size={13} className="text-teal-400 dark:text-teal-600 hover:text-teal-750 dark:hover:text-teal-300" /></button>
     </div>
   );
 }
@@ -151,24 +151,24 @@ function Message({ msg }) {
         {msg.hasFile && (
           <div className="flex items-center gap-1.5 mb-1 justify-end">
             <Paperclip size={11} className="text-teal-500" />
-            <span className="text-xs text-gray-400">{msg.fileName}</span>
+            <span className="text-xs text-gray-400 dark:text-slate-500">{msg.fileName}</span>
           </div>
         )}
         <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
           isUser
             ? "bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-tr-sm shadow-sm"
-            : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm"
+            : "bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-800 dark:text-slate-200 rounded-tl-sm shadow-sm"
         }`}>
           {isUser
             ? <p className="whitespace-pre-wrap">{msg.content}</p>
             : (
-              <div className="prose prose-sm max-w-none
-                prose-p:text-gray-700 prose-p:my-1.5 prose-p:leading-relaxed
-                prose-li:text-gray-700 prose-li:my-0.5
-                prose-headings:font-semibold prose-headings:text-gray-900 prose-headings:my-2
-                prose-strong:text-gray-900 prose-strong:font-semibold
-                prose-code:text-teal-700 prose-code:bg-teal-50 prose-code:px-1.5 prose-code:rounded prose-code:text-xs
-                prose-a:text-teal-600 prose-a:no-underline hover:prose-a:underline
+              <div className="prose prose-sm max-w-none dark:prose-invert
+                prose-p:text-gray-700 dark:prose-p:text-slate-300 prose-p:my-1.5 prose-p:leading-relaxed
+                prose-li:text-gray-700 dark:prose-li:text-slate-300 prose-li:my-0.5
+                prose-headings:font-semibold prose-headings:text-gray-900 dark:prose-headings:text-slate-100 prose-headings:my-2
+                prose-strong:text-gray-900 dark:prose-strong:text-slate-100 prose-strong:font-semibold
+                prose-code:text-teal-700 dark:prose-code:text-teal-400 prose-code:bg-teal-50 dark:prose-code:bg-teal-950/40 prose-code:px-1.5 prose-code:rounded prose-code:text-xs
+                prose-a:text-teal-600 dark:prose-a:text-teal-400 prose-a:no-underline hover:prose-a:underline
                 prose-ul:my-2 prose-ol:my-2">
                 <ReactMarkdown>{msg.content}</ReactMarkdown>
               </div>
@@ -178,7 +178,7 @@ function Message({ msg }) {
         {msg.location_used && (
           <div className="flex items-center gap-1 mt-1 ml-1">
             <MapPin size={10} className="text-teal-500" />
-            <span className="text-xs text-gray-400">Used your GPS location</span>
+            <span className="text-xs text-gray-400 dark:text-slate-500">Used your GPS location</span>
           </div>
         )}
       </div>
@@ -191,7 +191,7 @@ function TypingIndicator() {
   return (
     <div className="flex gap-2.5">
       <AIAvatar />
-      <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm transition-colors">
         <div className="flex gap-1.5 items-center">
           {[0, 1, 2].map((i) => (
             <div key={i} className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-bounce"
@@ -252,9 +252,9 @@ function ThreadPanel({ userId, activeThreadId, onSelect, onNew, onDeleteThread }
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      <div className="px-3 py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-        <span className="text-xs font-semibold text-gray-600">Conversations</span>
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 transition-colors">
+      <div className="px-3 py-3 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+        <span className="text-xs font-semibold text-gray-600 dark:text-slate-400">Conversations</span>
         <button onClick={onNew}
           className="w-6 h-6 rounded-lg bg-teal-400 hover:bg-teal-600 text-white flex items-center justify-center transition">
           <Plus size={13} />
@@ -262,7 +262,7 @@ function ThreadPanel({ userId, activeThreadId, onSelect, onNew, onDeleteThread }
       </div>
       <div className="flex-1 overflow-y-auto py-1 px-1">
         {threads.length === 0 && (
-          <p className="text-xs text-gray-400 text-center py-5 px-2">
+          <p className="text-xs text-gray-400 dark:text-slate-500 text-center py-5 px-2">
             No conversations yet. Start one!
           </p>
         )}
@@ -270,10 +270,10 @@ function ThreadPanel({ userId, activeThreadId, onSelect, onNew, onDeleteThread }
           <div key={t.id} onClick={() => onSelect(t.id)}
             className={`group flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition mb-0.5 ${
               activeThreadId === t.id
-                ? "bg-teal-50 border border-teal-100"
-                : "hover:bg-gray-50"
+                ? "bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900/40"
+                : "hover:bg-gray-50 dark:hover:bg-slate-800/40"
             }`}>
-            <MessageSquare size={12} className={`flex-shrink-0 ${activeThreadId === t.id ? "text-teal-500" : "text-gray-300"}`} />
+            <MessageSquare size={12} className={`flex-shrink-0 ${activeThreadId === t.id ? "text-teal-500" : "text-gray-300 dark:text-slate-600"}`} />
             {editing === t.id ? (
               <input value={editVal}
                 onChange={(e) => setEditVal(e.target.value)}
@@ -283,10 +283,10 @@ function ThreadPanel({ userId, activeThreadId, onSelect, onNew, onDeleteThread }
                 }}
                 onClick={(e) => e.stopPropagation()}
                 autoFocus
-                className="flex-1 text-xs border border-teal-400 rounded px-1.5 py-0.5 focus:outline-none min-w-0"
+                className="flex-1 text-xs border border-teal-400 dark:border-teal-500 bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 rounded px-1.5 py-0.5 focus:outline-none min-w-0"
               />
             ) : (
-              <span className={`flex-1 text-xs truncate min-w-0 ${activeThreadId === t.id ? "text-teal-700 font-medium" : "text-gray-600"}`}>
+              <span className={`flex-1 text-xs truncate min-w-0 ${activeThreadId === t.id ? "text-teal-700 dark:text-teal-300 font-medium" : "text-gray-600 dark:text-slate-400"}`}>
                 {t.title}
               </span>
             )}
@@ -296,7 +296,7 @@ function ThreadPanel({ userId, activeThreadId, onSelect, onNew, onDeleteThread }
                   className="text-teal-500 hover:text-teal-700"><Check size={11} /></button>
               ) : (
                 <button onClick={(e) => { e.stopPropagation(); setEditing(t.id); setEditVal(t.title); }}
-                  className="text-gray-300 hover:text-gray-600"><Edit2 size={11} /></button>
+                  className="text-gray-300 dark:text-slate-600 hover:text-gray-600 dark:hover:text-slate-350"><Edit2 size={11} /></button>
               )}
               <button onClick={(e) => deleteThread(t.id, e)}
                 className="text-gray-300 hover:text-red-500"><Trash2 size={11} /></button>
@@ -539,9 +539,9 @@ export default function ChatWindow({ userId }) {
   ];
 
   return (
-    <div className="flex h-full overflow-hidden bg-gray-50">
+    <div className="flex h-full overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       {/* Thread panel */}
-      <div className={`flex-shrink-0 border-r border-gray-200 transition-all duration-200 overflow-hidden ${showThreads ? "w-48 md:w-52" : "w-0"}`}>
+      <div className={`flex-shrink-0 border-r border-gray-200 dark:border-slate-800 transition-all duration-200 overflow-hidden ${showThreads ? "w-48 md:w-52" : "w-0"}`}>
         <ThreadPanel
           userId={userId}
           activeThreadId={threadId}
@@ -554,27 +554,27 @@ export default function ChatWindow({ userId }) {
       {/* Chat area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <div className="bg-white border-b border-gray-100 px-3 py-2 flex items-center gap-2 flex-shrink-0">
+        <div className="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800/80 px-3 py-2 flex items-center gap-2 flex-shrink-0 transition-colors">
           <button onClick={() => setShowThreads((p) => !p)}
-            className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition flex-shrink-0">
+            className="w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300 transition flex-shrink-0">
             <Menu size={15} />
           </button>
           <div className="flex-1 min-w-0 flex items-center gap-2">
             {longTermMemory && (
-              <span className="text-xs text-purple-500 hidden sm:inline">🧠 Memory active</span>
+              <span className="text-xs text-purple-500 dark:text-purple-400 font-semibold flex items-center gap-1">🧠 Memory active</span>
             )}
             {locStatus === "fetching" && (
-              <span className="text-xs text-teal-600 flex items-center gap-1">
+              <span className="text-xs text-teal-600 dark:text-teal-400 flex items-center gap-1">
                 <MapPin size={11} className="animate-pulse" /> Getting location...
               </span>
             )}
             {locStatus === "got" && (
-              <span className="text-xs text-teal-600 flex items-center gap-1">
+              <span className="text-xs text-teal-600 dark:text-teal-400 flex items-center gap-1 font-semibold">
                 <MapPin size={11} /> Location found
               </span>
             )}
             {locStatus === "denied" && (
-              <span className="text-xs text-amber-500 flex items-center gap-1">
+              <span className="text-xs text-amber-500 dark:text-amber-400 flex items-center gap-1">
                 <MapPin size={11} /> Location unavailable - share your city
               </span>
             )}
@@ -590,14 +590,14 @@ export default function ChatWindow({ userId }) {
                   <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                 </svg>
               </div>
-              <h3 className="text-base font-semibold text-gray-800 mb-1">How can I help you?</h3>
-              <p className="text-sm text-gray-400 max-w-xs leading-relaxed">
+              <h3 className="text-base font-semibold text-gray-800 dark:text-slate-200 mb-1">How can I help you?</h3>
+              <p className="text-sm text-gray-400 dark:text-slate-500 max-w-xs leading-relaxed">
                 Ask about symptoms, find hospitals, upload reports, or chat about your health.
               </p>
               <div className="grid grid-cols-2 gap-2 mt-5 w-full max-w-sm">
                 {SUGGESTIONS.map((s) => (
                   <button key={s} onClick={() => sendMessage(s)}
-                    className="text-xs bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-gray-600 hover:border-teal-300 hover:text-teal-700 hover:bg-teal-50 transition text-left leading-snug shadow-sm">
+                    className="text-xs bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-gray-600 dark:text-slate-400 hover:border-teal-350 dark:hover:border-teal-700 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/20 transition text-left leading-snug shadow-sm">
                     {s}
                   </button>
                 ))}
@@ -610,7 +610,7 @@ export default function ChatWindow({ userId }) {
         </div>
 
         {/* Input area */}
-        <div className="bg-white border-t border-gray-100 px-3 py-3 flex-shrink-0">
+        <div className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800/80 px-3 py-3 flex-shrink-0 transition-colors">
           {showDocPicker && (
             <DocPicker userId={userId}
               onInsert={(text) => {
@@ -630,8 +630,8 @@ export default function ChatWindow({ userId }) {
               title="Summarize a saved document"
               className={`w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0 transition ${
                 showDocPicker
-                  ? "bg-teal-50 border-teal-400 text-teal-600"
-                  : "border-gray-200 text-gray-400 hover:border-teal-300 hover:text-teal-500 hover:bg-teal-50"
+                  ? "bg-teal-50 dark:bg-teal-950/30 border-teal-400 text-teal-650 dark:text-teal-350"
+                  : "border-gray-200 dark:border-slate-850 text-gray-400 dark:text-slate-500 hover:border-teal-350 dark:hover:border-teal-700 hover:text-teal-500 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/15"
               }`}>
               <FileText size={15} />
             </button>
@@ -639,7 +639,7 @@ export default function ChatWindow({ userId }) {
             {/* Upload file */}
             <button onClick={() => fileInputRef.current?.click()}
               title="Upload a medical document"
-              className="w-9 h-9 rounded-xl border border-gray-200 text-gray-400 hover:border-teal-300 hover:text-teal-500 hover:bg-teal-50 flex items-center justify-center flex-shrink-0 transition">
+              className="w-9 h-9 rounded-xl border border-gray-200 dark:border-slate-850 text-gray-400 dark:text-slate-500 hover:border-teal-350 dark:hover:border-teal-700 hover:text-teal-500 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/15 flex items-center justify-center flex-shrink-0 transition">
               <Paperclip size={15} />
             </button>
             <input ref={fileInputRef} type="file"
@@ -653,7 +653,7 @@ export default function ChatWindow({ userId }) {
                 ? "Add a message about this file (optional)..."
                 : "Ask anything"}
               rows={1}
-              className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-50 transition leading-relaxed bg-gray-50"
+              className="flex-1 resize-none rounded-xl border border-gray-205 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-sm text-gray-900 dark:text-slate-100 px-3.5 py-2.5 focus:outline-none focus:border-teal-450 dark:focus:border-teal-500 focus:ring-1 focus:ring-teal-50 dark:focus:ring-teal-950/15 transition leading-relaxed"
               style={{ minHeight: "42px", maxHeight: "120px" }}
             />
             <button onClick={() => sendMessage()}

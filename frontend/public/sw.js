@@ -1,4 +1,4 @@
-const CACHE_VERSION = "HealthMate-v3";
+const CACHE_VERSION = "HealthMate-v4";
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const API_CACHE     = `${CACHE_VERSION}-api`;
 
@@ -71,6 +71,25 @@ self.addEventListener("fetch", (e) => {
           status: 503,
         })
       )
+    );
+    return;
+  }
+
+  // Navigation requests (index.html) - Network First to check for updates
+  if (request.mode === "navigate") {
+    e.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone));
+          }
+          return res;
+        })
+        .catch(async () => {
+          const cache = await caches.open(STATIC_CACHE);
+          return (await cache.match("/index.html")) || (await cache.match(request));
+        })
     );
     return;
   }

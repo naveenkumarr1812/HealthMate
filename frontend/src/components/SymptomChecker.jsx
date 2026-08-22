@@ -46,17 +46,17 @@ function Message({ msg }) {
         <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
           isUser
             ? "bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-tr-sm shadow-sm"
-            : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm"
+            : "bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-800 dark:text-slate-200 rounded-tl-sm shadow-sm"
         }`}>
           {isUser ? (
             <p className="whitespace-pre-wrap">{msg.content}</p>
           ) : (
-            <div className="prose prose-sm max-w-none
-              prose-p:text-gray-700 prose-p:my-1.5
-              prose-li:text-gray-700 prose-li:my-0.5
-              prose-headings:font-semibold prose-headings:text-gray-900 prose-headings:my-2
-              prose-strong:text-gray-900
-              prose-a:text-teal-600 prose-a:no-underline hover:prose-a:underline">
+            <div className="prose prose-sm max-w-none dark:prose-invert
+              prose-p:text-gray-700 dark:prose-p:text-slate-300 prose-p:my-1.5
+              prose-li:text-gray-700 dark:prose-li:text-slate-300 prose-li:my-0.5
+              prose-headings:font-semibold prose-headings:text-gray-900 dark:prose-headings:text-slate-100 prose-headings:my-2
+              prose-strong:text-gray-900 dark:prose-strong:text-slate-100
+              prose-a:text-teal-600 dark:prose-a:text-teal-400 prose-a:no-underline hover:prose-a:underline">
               <ReactMarkdown>{msg.content}</ReactMarkdown>
             </div>
           )}
@@ -71,7 +71,7 @@ function TypingIndicator() {
   return (
     <div className="flex gap-2.5">
       <AIAvatar />
-      <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm transition-colors">
         <div className="flex gap-1.5 items-center">
           {[0,1,2].map((i) => (
             <div key={i} className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-bounce"
@@ -174,18 +174,18 @@ export default function SymptomChecker({ userId }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-slate-950 transition-colors">
 
       {/* Header with progress */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex-shrink-0">
+      <div className="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-4 py-3 flex-shrink-0 transition-colors">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
-            <Stethoscope size={15} className="text-teal-600" />
-            <span className="text-sm font-semibold text-gray-900">Symptom Checker</span>
-            <span className="text-xs bg-teal-50 text-teal-600 border border-teal-100 px-2 py-0.5 rounded-full font-medium">AI Guided</span>
+            <Stethoscope size={15} className="text-teal-600 dark:text-teal-400" />
+            <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">Symptom Checker</span>
+            <span className="text-xs bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400 border border-teal-100 dark:border-teal-900/50 px-2 py-0.5 rounded-full font-medium">AI Guided</span>
           </div>
           <button onClick={reset}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition px-2 py-1 rounded-lg hover:bg-gray-100">
+            className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300 transition px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
             <RotateCcw size={12} /> New assessment
           </button>
         </div>
@@ -194,19 +194,19 @@ export default function SymptomChecker({ userId }) {
         <div className="flex gap-1.5 mb-1.5">
           {STEPS.map((s, i) => (
             <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-              i < step ? "bg-teal-400" : i === step ? "bg-teal-200" : "bg-gray-100"
+              i < step ? "bg-teal-400" : i === step ? "bg-teal-200 dark:bg-teal-900/50" : "bg-gray-100 dark:bg-slate-800"
             }`} />
           ))}
         </div>
-        <p className="text-xs text-gray-400">
-          Step {Math.min(step + 1, 4)} of 4 - <span className="text-teal-600 font-medium">{STEPS[Math.min(step, 3)]}</span>
+        <p className="text-xs text-gray-400 dark:text-slate-500">
+          Step {Math.min(step + 1, 4)} of 4 - <span className="text-teal-600 dark:text-teal-400 font-medium">{STEPS[Math.min(step, 3)]}</span>
         </p>
       </div>
 
       {/* Disclaimer */}
-      <div className="bg-amber-50 border-b border-amber-100 px-4 py-2 flex items-start gap-2 flex-shrink-0">
-        <AlertTriangle size={13} className="text-amber-500 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700 leading-relaxed">
+      <div className="bg-amber-50 dark:bg-amber-950/20 border-b border-amber-100 dark:border-amber-900/30 px-4 py-2 flex items-start gap-2 flex-shrink-0">
+        <AlertTriangle size={13} className="text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-700 dark:text-amber-450 leading-relaxed">
           This is for guidance only - not a medical diagnosis. Always consult a qualified doctor.
         </p>
       </div>
@@ -221,14 +221,14 @@ export default function SymptomChecker({ userId }) {
       {/* Symptom chips - shown on step 0 only */}
       {step === 0 && !loading && (
         <div className="px-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-gray-400 mb-2">Quick select:</p>
+          <p className="text-xs text-gray-400 dark:text-slate-550 mb-2">Quick select:</p>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {SYMPTOM_CHIPS.map((chip) => (
               <button key={chip} onClick={() => toggleChip(chip)}
-                className={`text-xs px-3 py-1.5 rounded-full border transition font-medium ${
+                className={`text-xs px-3 py-1.5 rounded-full border transition font-semibold ${
                   selectedChips.includes(chip)
-                    ? "bg-teal-50 border-teal-400 text-teal-700"
-                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                    ? "bg-teal-50 dark:bg-teal-950/30 border-teal-400 text-teal-700 dark:text-teal-350"
+                    : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-850 text-gray-500 dark:text-slate-400 hover:border-gray-300 dark:hover:border-slate-700"
                 }`}>
                 {chip}
               </button>
@@ -236,7 +236,7 @@ export default function SymptomChecker({ userId }) {
           </div>
           {selectedChips.length > 0 && (
             <button onClick={addChipsToInput}
-              className="text-xs text-teal-600 font-medium hover:underline">
+              className="text-xs text-teal-600 dark:text-teal-400 font-medium hover:underline">
               Add {selectedChips.length} selected → input ↓
             </button>
           )}
@@ -246,12 +246,12 @@ export default function SymptomChecker({ userId }) {
       {/* Completion buttons */}
       {isComplete && (
         <div className="px-4 pb-3 flex-shrink-0">
-          <div className="bg-teal-50 border border-teal-200 rounded-xl p-3 mb-3">
-            <p className="text-xs text-teal-700 font-medium mb-1">Assessment complete ✅</p>
-            <p className="text-xs text-teal-600">Please share this with your doctor for proper diagnosis.</p>
+          <div className="bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-900/40 rounded-xl p-3 mb-3">
+            <p className="text-xs text-teal-750 dark:text-teal-450 font-bold mb-1">Assessment complete ✅</p>
+            <p className="text-xs text-teal-650 dark:text-teal-500 font-semibold">Please share this with your doctor for proper diagnosis.</p>
           </div>
           <button onClick={reset}
-            className="w-full py-2.5 rounded-xl bg-teal-400 hover:bg-teal-600 text-white text-sm font-medium transition flex items-center justify-center gap-2">
+            className="w-full py-2.5 rounded-xl bg-teal-400 hover:bg-teal-600 text-white text-sm font-semibold transition flex items-center justify-center gap-2">
             <RotateCcw size={14} /> Start New Assessment
           </button>
         </div>
@@ -259,7 +259,7 @@ export default function SymptomChecker({ userId }) {
 
       {/* Input */}
       {!isComplete && (
-        <div className="bg-white border-t border-gray-100 px-3 py-3 flex-shrink-0">
+        <div className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800/80 px-3 py-3 flex-shrink-0 transition-colors">
           <div className="flex gap-2 items-end">
             <textarea ref={textareaRef} value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -271,7 +271,7 @@ export default function SymptomChecker({ userId }) {
                 "Describe any other symptoms..."
               }
               rows={1}
-              className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-50 transition leading-relaxed bg-gray-50"
+              className="flex-1 resize-none rounded-xl border border-gray-205 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-sm text-gray-900 dark:text-slate-100 px-3.5 py-2.5 focus:outline-none focus:border-teal-450 dark:focus:border-teal-500 focus:ring-1 focus:ring-teal-50 dark:focus:ring-teal-950/15 transition leading-relaxed"
               style={{ minHeight: "42px", maxHeight: "100px" }}
             />
             <button onClick={() => sendMessage()}
