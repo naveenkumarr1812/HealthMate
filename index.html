@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1D9E75" />
+    <meta name="description" content="HealthMate - Your intelligent personal medical assistant" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HealthMate" />
+    <link rel="manifest" href="/medai/manifest.json" />
+    <link rel="apple-touch-icon" href="/medai/icons/icon-192.png" />
+    <link rel="icon" type="image/png" href="/medai/icons/icon-96.png" />
+    <title>HealthMate - Health Assistant</title>
+    <script type="module" crossorigin src="/medai/assets/index-DNk4VFXi.js"></script>
+    <link rel="modulepreload" crossorigin href="/medai/assets/react-router-CrweUDpf.js">
+    <link rel="modulepreload" crossorigin href="/medai/assets/markdown-D92Ie-WD.js">
+    <link rel="modulepreload" crossorigin href="/medai/assets/supabase-C0Z0FS3K.js">
+    <link rel="modulepreload" crossorigin href="/medai/assets/icons-Dpiu1wyk.js">
+    <link rel="modulepreload" crossorigin href="/medai/assets/http-qFyJwsfU.js">
+    <link rel="stylesheet" crossorigin href="/medai/assets/index--K0bQejK.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Register service worker for PWA
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js")
+            .then(() => console.log("[PWA] Service Worker registered"))
+            .catch((e) => console.warn("[PWA] SW registration failed:", e));
+        });
+      }
+    </script>
+  </body>
+</html>
