@@ -28,10 +28,8 @@ function PWAInstallBanner() {
   return (
     <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-80 bg-white border border-teal-200 rounded-2xl shadow-lg p-4 z-50 slide-up">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center flex-shrink-0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
+        <div className="w-10 h-10 flex-shrink-0">
+          <img src="/icons/icon-96.png" className="w-full h-full object-cover rounded-xl shadow-sm" alt="Logo" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-900">Install HealthMate</p>
@@ -69,10 +67,8 @@ function ProtectedRoute({ children }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-950 transition-colors">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center mx-auto mb-4 animate-pulse shadow-md">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
+          <div className="w-12 h-12 mx-auto mb-4 animate-pulse">
+            <img src="/icons/icon-192.png" className="w-full h-full object-cover rounded-2xl shadow-md" alt="Logo" />
           </div>
           <p className="text-sm text-gray-500 dark:text-slate-400">Loading HealthMate...</p>
         </div>
