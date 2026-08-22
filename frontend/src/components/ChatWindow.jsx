@@ -335,19 +335,11 @@ export default function ChatWindow({ userId }) {
     });
   }, [userId]);
 
-  // Create a brand new thread
-  const createNewThread = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("chat_threads")
-      .insert({ user_id: userId, title: "New chat", updated_at: new Date().toISOString() })
-      .select("id")
-      .single();
-    if (!error && data) {
-      setThreadId(data.id);
-      setMessages([]);
-      window.dispatchEvent(new Event("HealthMate:thread-updated"));
-    }
-  }, [userId]);
+  // Clear chat screen and start a transient (unsaved) new chat session
+  const createNewThread = useCallback(() => {
+    setThreadId(null);
+    setMessages([]);
+  }, []);
 
   // Load existing thread messages
   const loadThread = useCallback(async (tid) => {
@@ -381,11 +373,39 @@ export default function ChatWindow({ userId }) {
     else createNewThread();
   }, [threadId, userId, loadThread, createNewThread]);
 
-  // On mount - always create a new thread to open in a new chat window
+  // On mount - clear screen to unsaved chat session and cleanup empty threads
   useEffect(() => {
-    if (!userId || threadId) return;
-    createNewThread();
-  }, [userId, createNewThread]);
+    if (!userId) return;
+
+    const cleanupEmptyThreads = async () => {
+      try {
+        const { data: threads } = await supabase
+          .from("chat_threads")
+          .select("id")
+          .eq("user_id", userId);
+        
+        if (!threads || threads.length === 0) return;
+
+        const { data: messages } = await supabase
+          .from("chat_messages")
+          .select("thread_id")
+          .in("thread_id", threads.map((t) => t.id));
+
+        const activeTids = new Set((messages || []).map((m) => m.thread_id));
+        const emptyTids = threads.map((t) => t.id).filter((id) => !activeTids.has(id));
+
+        if (emptyTids.length > 0) {
+          await supabase.from("chat_threads").delete().in("id", emptyTids);
+          window.dispatchEvent(new Event("HealthMate:thread-updated"));
+        }
+      } catch (e) {
+        console.warn("Cleanup empty threads:", e.message);
+      }
+    };
+
+    cleanupEmptyThreads();
+    if (!threadId) createNewThread();
+  }, [userId, threadId, createNewThread]);
 
   // Scroll to bottom
   useEffect(() => {
@@ -400,21 +420,23 @@ export default function ChatWindow({ userId }) {
     return () => window.removeEventListener("resize", h);
   }, []);
 
-  const saveMessage = async (role, content, locationUsed = false) => {
-    if (!threadId) return;
+  const saveMessage = async (role, content, locationUsed = false, tid = threadId) => {
+    const targetTid = tid || threadId;
+    if (!targetTid) return;
     await supabase.from("chat_messages").insert({
-      thread_id: threadId, role, content, location_used: locationUsed,
+      thread_id: targetTid, role, content, location_used: locationUsed,
     });
     await supabase.from("chat_threads")
       .update({ updated_at: new Date().toISOString() })
-      .eq("id", threadId);
+      .eq("id", targetTid);
     window.dispatchEvent(new Event("HealthMate:thread-updated"));
   };
 
-  const autoName = async (text) => {
-    if (!threadId) return;
+  const autoName = async (text, tid = threadId) => {
+    const targetTid = tid || threadId;
+    if (!targetTid) return;
     const title = text.length > 40 ? text.slice(0, 37) + "..." : text;
-    await supabase.from("chat_threads").update({ title }).eq("id", threadId);
+    await supabase.from("chat_threads").update({ title }).eq("id", targetTid);
     window.dispatchEvent(new Event("HealthMate:thread-updated"));
   };
 
@@ -426,16 +448,38 @@ export default function ChatWindow({ userId }) {
 
   const sendMessage = async (overrideText) => {
     const text = (overrideText || input).trim();
-    if ((!text && !pendingFile) || loading) return;
+    if (!text && !pendingFile) return;
 
     setInput("");
     setLoading(true);
     setShowDocPicker(false);
 
+    // Lazily create thread in DB on first user message to avoid empty threads clutter
+    let activeTid = threadId;
+    try {
+      if (!activeTid) {
+        const titleText = pendingFile ? `[File] ${pendingFile.name}` : text;
+        const title = titleText.length > 40 ? titleText.slice(0, 37) + "..." : titleText;
+        const { data, error } = await supabase
+          .from("chat_threads")
+          .insert({ user_id: userId, title, updated_at: new Date().toISOString() })
+          .select("id")
+          .single();
+        if (error) throw error;
+        activeTid = data.id;
+        setThreadId(data.id);
+        window.dispatchEvent(new Event("HealthMate:thread-updated"));
+      }
+    } catch (err) {
+      setMessages((p) => [...p, { role: "assistant", content: `❌ Error starting chat: ${err.message}`, sources: [] }]);
+      setLoading(false);
+      return;
+    }
+
     // Auto-name thread on first user message
     const isFirstMessage = messages.filter((m) => m.role === "user").length === 0;
     if (isFirstMessage) {
-      autoName(pendingFile ? `[File] ${pendingFile.name}` : text);
+      await autoName(pendingFile ? `[File] ${pendingFile.name}` : text, activeTid);
     }
 
     // Handle file upload
@@ -486,7 +530,7 @@ export default function ChatWindow({ userId }) {
     const fullQuery = text + fileContent;
     const userMsg   = { role: "user", content: text, location_used: false, sources: [], hasFile, fileName };
     setMessages((p) => [...p, userMsg]);
-    await saveMessage("user", text + (hasFile ? ` [Attached: ${fileName}]` : ""), false);
+    await saveMessage("user", text + (hasFile ? ` [Attached: ${fileName}]` : ""), false, activeTid);
 
     // Last 12 messages for conversation history
     const convHistory = messages.slice(-12).map((m) => ({ role: m.role, content: m.content }));
@@ -509,7 +553,7 @@ export default function ChatWindow({ userId }) {
         sources: res.data.sources_used || [],
       };
       setMessages((p) => [...p, aiMsg]);
-      await saveMessage("assistant", aiContent, locationUsed);
+      await saveMessage("assistant", aiContent, locationUsed, activeTid);
 
       // Update long-term memory every 8 messages
       const allMsgs = [...messages, userMsg, aiMsg];
