@@ -2,7 +2,7 @@
   "name": "HealthMate - Health Assistant",
   "short_name": "HealthMate",
   "description": "Your intelligent personal medical assistant",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1D9E75",
@@ -19,5 +19,5 @@
   ],
   "categories": ["health", "medical", "lifestyle"],
   "lang": "en",
-  "scope": "/"
+  "scope": "./"
 }

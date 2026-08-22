@@ -2,13 +2,15 @@ const CACHE_VERSION = "HealthMate-v5";
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const API_CACHE     = `${CACHE_VERSION}-api`;
 
+const BASE_URL = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/'));
+
 // Assets to pre-cache on install
 const PRECACHE_ASSETS = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  `${BASE_URL}/`,
+  `${BASE_URL}/index.html`,
+  `${BASE_URL}/manifest.json`,
+  `${BASE_URL}/icons/icon-192.png`,
+  `${BASE_URL}/icons/icon-512.png`,
 ];
 
 // Never cache these - always fresh from network
