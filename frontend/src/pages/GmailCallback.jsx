@@ -56,7 +56,11 @@ export default function GmailCallback() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ code, user_id: userId }),
+          body: JSON.stringify({ 
+            code, 
+            user_id: userId,
+            redirect_uri: `${window.location.origin}/gmail-callback`
+          }),
         });
 
         const data = await res.json();

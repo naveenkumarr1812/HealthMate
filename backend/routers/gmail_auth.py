@@ -14,11 +14,15 @@ REDIRECT_URI         = os.getenv("GMAIL_REDIRECT_URI", "http://localhost:5173/gm
 class ExchangeRequest(BaseModel):
     code: str
     user_id: str
+    redirect_uri: str | None = None
 
 @router.post("/exchange")
 async def exchange_code(request: ExchangeRequest):
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="Google OAuth not configured on server.")
+
+    # Use dynamic redirect_uri if provided by frontend, fallback to server default
+    redirect_uri = request.redirect_uri or REDIRECT_URI
 
     async with httpx.AsyncClient() as client:
         token_res = await client.post(
@@ -27,7 +31,7 @@ async def exchange_code(request: ExchangeRequest):
                 "code":          request.code,
                 "client_id":     GOOGLE_CLIENT_ID,
                 "client_secret": GOOGLE_CLIENT_SECRET,
-                "redirect_uri":  REDIRECT_URI,
+                "redirect_uri":  redirect_uri,
                 "grant_type":    "authorization_code",
             },
         )
